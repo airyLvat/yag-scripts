@@ -1,0 +1,3 @@
+{{/* command: time */}}
+
+{{print "<t:" currentTime.Unix ":F>"}}

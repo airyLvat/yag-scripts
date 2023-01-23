@@ -1,0 +1,5 @@
+{{/* reactionadded */}}
+
+{{if hasRoleID "1032775032239300618"}}
+	{{deleteMessageReaction nil .Message.ID .User.ID .Reaction.Emoji.APIName}}
+{{end}}

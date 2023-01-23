@@ -1,0 +1,6 @@
+{{/* command: link */}}
+
+{{sendMessage .Channel.ID (cembed
+"title" "Scripture Alone"
+"description" "https://fullyawakened.org/scripturealone/scripture.html"
+"color" 3394422)}}

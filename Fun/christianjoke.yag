@@ -1,0 +1,34 @@
+{{/* ^\^(christianjoke|jokechristian|christianjokes|jokechristians) */}}
+
+{{$cooldownExempt := (cslice
+	1028490891901554798
+	1028549391306469376
+)}}
+{{$checkCooldown:=true}}
+{{$runIt:=true}}
+{{range $cooldownExempt }}
+	{{if hasRoleID .}}
+		{{$checkCooldown = false}}
+	{{end}}
+{{end}}
+{{if $checkCooldown}}
+	{{$global := 1}}
+	{{$name := "christianjoke"}}
+	{{$length := 60}}
+	{{$announce := 1}}
+	{{if eq $global 0}}{{$global = .User.ID}}{{else}}{{$global = (toInt64 0)}}{{end}}
+	{{if (dbGet $global $name)}}
+		{{if eq $announce 1}}
+			  {{$msgID:=""}} {{$link:=""}} :warning: Chritian Joke is still on cooldown for: {{humanizeDurationSeconds ((dbGet $global $name).ExpiresAt.Sub currentTime)}}. 
+		  {{deleteResponse 20}}
+		  {{$msgID:=sendMessageRetID nil $link}}
+		  {{deleteMessage nil $msgID 20}}
+	{{end}}
+	{{$runIt = false}}
+	{{else}}{{dbSetExpire $global $name "cooldown" $length}}
+	{{end}}
+{{end}}
+{{if $runIt}} 
+	{{"Which king liked to do things on his own?Solomon."}} 
+	
+{{end}}

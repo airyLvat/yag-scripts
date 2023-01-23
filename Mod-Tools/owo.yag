@@ -1,0 +1,22 @@
+{{/* command: owo */}}
+
+{{$allowedRole := 1029105006508519556}}
+{{$allowedRole2 := 1028490891901554798}}
+{{$owoRoleID := 1039603853299036201}}
+ 
+{{$args := parseArgs 1 "Syntax is `^owo [@user]`"
+    (carg "userid" "user to be owoified")}}
+{{if or (hasRoleID $allowedRole) (hasRoleID $allowedRole2)}} {{/* Mod commands */}}
+    {{$userID:=($args.Get 0)}}
+	{{$auditCh := 1029137217643356200}}
+	{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ")")}}
+    {{if and (not (targetHasRoleID $userID $allowedRole)) (not (targetHasRoleID $userID $allowedRole2))}} {{/* Won't run if target is a mod */}}
+        {{if not (targetHasRoleID $userID $owoRoleID)}}
+            {{giveRoleID $userID $owoRoleID}}
+            {{addReactions "✅"}}
+        {{else}}
+            {{takeRoleID $userID $owoRoleID}}
+            {{addReactions "✅"}}
+        {{end}}
+    {{end}}
+{{end}}

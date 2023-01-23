@@ -1,0 +1,62 @@
+{{/* .* */}}
+
+{{/*Turn-Based Debate*/}}
+{{/*CC to switches over the Debate-typing role to the next debater in line. There may be more than 2 debaters. Use Regex .* as trigger*/}}
+ 
+{{$dbID:=179}}
+{{$debateRole:=1065730204401680484}}
+{{$debateChannel:=1065729758635249804}}
+{{$userID:=str .User.ID}}
+{{$muteRole:= (cslice 1028705335751487550 1029138615504207975)}}
+ 
+{{/*------Code starts here-----*/}}
+{{if .ExecData}}{{/*check if next debater is muted or left the server*/}}
+	{{if gt (len .ExecData.allDebaters) 1}}{{/*if we have at least 2 debaters*/}}
+		{{$isOut:=false}}
+		{{$nextPos:=toInt .ExecData.nextPos}}
+		{{if ge $nextPos (len .ExecData.allDebaters)}}{{$nextPos = 0}}{{end}}
+		{{$targetID:=(index .ExecData.allDebaters $nextPos)}}
+		{{$temp1:=(getMember $targetID)}}
+		{{if $temp1}}
+			{{range $muteRole}}{{if targetHasRoleID $targetID .}}{{$isOut = true}}{{end}}{{end}}
+		{{else}}
+			{{$isOut = true}}
+		{{end}}
+		{{if $isOut}}
+<@{{$targetID}}> cannot type here
+			{{$stringDebaters:=(reReplace $targetID .ExecData.stringDebaters "")}}
+			{{$sliceDebaters:=(reFindAll "[0-9]+" $stringDebaters)}}
+			{{execCC .CCID nil 1 (sdict "stringDebaters" $stringDebaters "allDebaters" $sliceDebaters "nextPos" $nextPos)}}
+		{{else}}
+			{{giveRoleID $targetID $debateRole}}
+			{{$msgID:=sendMessageRetID nil (joinStr "" "<@" $targetID "> your turn!")}}
+			{{$oldMsg := dbGet $dbID "debatemessage"}}
+			{{if $oldMsg}}{{deleteMessage $debateChannel $oldMsg.Value 0}}{{end}}
+			{{dbSet $dbID "debatemessage" (str $msgID)}}
+		{{end}}
+	{{else}}{{/*if we have only 1 debater*/}}
+Debate partners are not found. Ending the debate.
+		{{dbDel $dbID "debate"}}
+		{{dbDel $dbID "debatestart"}}
+	{{end}}	
+{{else}}{{/*this is the start of code before execCC*/}}
+	{{if (hasRoleID $debateRole)}} {{/*can remove this line and the final END if CC is limited to users with the debateRole only*/}}
+		{{removeRoleID $debateRole}}
+		{{$debaters := dbGet $dbID "debate"}}
+		{{if $debaters}}
+			{{$currentPos:=0}}
+			{{$nextPos:=0}}
+			{{$tempVar1:=(reFindAll "[0-9]+" $debaters.Value) }}
+			{{ range $index, $allDebaters:=reFindAll "[0-9]+" $debaters.Value}}{{if eq $allDebaters $userID}}{{$currentPos = $index}}{{end}}{{end}}
+			{{$nextPos = add $currentPos 1}}
+			{{if eq .Message.Content "exit"}}
+				{{$tempVar2:=(reReplace $userID $debaters.Value "")}}
+				{{dbSet $dbID "debate" $tempVar2}}		
+				{{$tempVar1 = (reFindAll "[0-9]+" $tempVar2) }}
+<@{{$userID}}> has left the debate.
+			{{end}}
+			{{/*-----check if the next debater can participate----*/}}
+			{{execCC .CCID nil 0 (sdict "stringDebaters" $debaters.Value "allDebaters" $tempVar1 "nextPos" $nextPos)}}
+		{{end}}
+	{{end}}
+{{end}}

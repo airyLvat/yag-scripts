@@ -1,0 +1,13 @@
+{{/* This Code is part of a Sticky Roles System that includes a Custom Command, Kick DM, Ban DM, Join Message and Leave Message */}}
+{{/* Leave Message Part */}}
+{{$dbRoles := "StickyRoles"}}
+{{$dbKickBan := "KickBan"}}
+{{$dbID := 2143}}
+
+{{with (dbGet .User.ID $dbKickBan)}}
+{{$dbVal := (dbGet $dbID $dbRoles).Value}}
+{{$dbValConv := sdict $dbVal}}
+{{with ($dbValConv.Get (toString $.User.ID))}}
+{{dbSet $dbID "StickyRoles" ($dbValConv.Del (toString .User.ID))}}
+{{end}}
+{{end}}

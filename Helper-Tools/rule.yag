@@ -1,0 +1,147 @@
+{{/* command: rule */}}
+
+{{ $cc := toInt .CCID }}
+{{$ruleChID:=1028495485113212968}}
+{{$rules:=sdict 
+"1" "1037774668310003733" 
+"2" "1037775009873145917"
+"3" "1037775340128440321"
+"4" "1037775590792646726"
+"5" "1037775840605372616"
+"6" "1037776097422622751"
+"7" "1037776316302377020"
+"8" "1037776498398085170"
+"9" "1037776701553381418"
+"10" "1037777100058402919"
+"11" "1037777317793116311"
+"12" "1037777680231301151"
+"13" "1037778040538800218"
+"14" "1037778188555780116"
+"15" "1037778371003809822"
+"16" "1037778500519727215"
+"17" "1037778724541710407"
+"18" "1037778964648837120"
+"19" "1037779368195391495"
+"20" "1037779511657373717"
+"21" "1037779670445334538"
+"22" "1037779870689808495"
+"23" "1037780337801048144"
+}}
+{{$ruleNo:=0}}
+{{$allUsers:=cslice ""}}
+{{$targetSet:=false}}
+ 
+{{if not .ExecData}}
+	{{$doOnce:=false}}
+	{{if not $doOnce}}
+		{{$msgContent:=""}}
+		{{$msgContent:=.Message.Content}}
+		{{/*if and (ne .Channel.ID 711132678836977664) (ne .Channel.ID 676992333430128661) (ne .Channel.ID 856344676969611284) (ne .Channel.ID 856344840274313246)*/}}
+			{{/*sendMessage 711132678836977664 (joinStr ": " .User.Username $msgContent)*/}}
+		{{/*end*/}}	
+		{{$doOnce:=true}}
+	{{end}}	
+	{{$args := parseArgs 1 "Syntax is `^rule|rules [1|christianity|christian|blasphem|altar|sigil|symbol|satan|baphomet|dat|server|flirt|2|disobey|obey|impersonat|beg|mod|management|minimodding|mod|bot|3|swear|curse|cuss|offensive lang|f word|slur|profan|4|debate|discuss|argu|respect|civil|fallacy|illogical|5|wrong channel|derail|topic|media|6|role|7|DM|cross server|drama|block|8|recruit|cult|sect|movement|9|language|English|english|history|scripture|10|phobia|bully|sexism|discriminat|persecut|hate|hatred|denom|gender|raci|race|backbit|11|minor|mature|sfw|appropriate|sex|drug|12|spam|caps|react|shout|farm|xp|loud|pitch|reaction|13|troll|roleplay|larp|victim|stalk|hack|age|14|consent|convert|interest|willing|15|ping|mention|callmod|16|mute|jail|rehab|pass|17|misrepresent|misinform|lie|lying|faith|18|avatar|duplicate|profile|pfp|status|name|voice changer|19|dox|pii|personal|photo|selfie|address|phone number|virus|trojan|worm|scam|20|advert|server|promote|website|invite|21|violen|terror|war|suicide|die|harm|threat|dark|22|nazi|fascist|socialist|semit|jew|23|circumvent|alt|avoid|joke|joking]`"   
+    (carg "string" "text to send")
+	(carg "userid" "user id to be warned")
+	(carg "userid" "user 2 to join debates")
+	(carg "userid" "user 3 to join debates")
+	(carg "userid" "user 4 to join debates")
+	(carg "userid" "user 5 to join debates")
+	(carg "userid" "user 6 to join debates")
+	(carg "userid" "user 7 to join debates")
+	}}
+	{{$arg:=($args.Get 0)}}
+	{{$placeholder:=(reFind "([1-9](?:\\d+)?)" $arg)}}
+	{{range $x:=seq 1 8}}{{- if $args.IsSet $x -}}{{- $allUsers = $allUsers.Append ($args.Get $x) -}}{{- $targetSet = true -}}{{- end -}}{{end}}	
+	{{if $placeholder}}
+		{{$ruleNo = (toInt $placeholder)}}
+	{{else}}
+		{{if (reFind "(?i)(1|Christianity|christian|blasphem|altar|sigil|symbol|satan|baphomet|dat|server|flirt)" $arg)}}
+			{{$ruleNo = 1}}
+		{{else if (reFind "(?i)(2|disobey|obey|impersonat|beg|mod|management|minimodding (mod|bot))" $arg)}}
+			{{$ruleNo = 2}}
+		{{else if (reFind "(?i)(3|swear|curse|cuss|offensive lang|f word|slur|profan)" $arg)}}
+			{{$ruleNo = 3}}
+		{{else if (reFind "(?i)(4|debate|discuss|argu|respect|civil|fallacy|illogical)" $arg)}}
+			{{$ruleNo = 4}}
+		{{else if (reFind "(?i)(5|wrong channel|derail|topic|media)" $arg)}}
+			{{$ruleNo = 5}}
+		{{else if (reFind "(?i)(6|role)" $arg)}}
+			{{$ruleNo = 6}}
+		{{else if (reFind "(?i)(7|DM|cross server|drama|block)" $arg)}}
+			{{$ruleNo = 7}}
+		{{else if (reFind "(?i)(8|(recruit|cult|sect|movement))" $arg)}}
+			{{$ruleNo = 8}}
+		{{else if (reFind "(?i)(9|language|English|english|history|scripture)" $arg)}}
+			{{$ruleNo = 9}}
+		{{end}}
+	{{end}}
+	{{if $ruleNo}}
+		{{$tempVar:=(getMessage $ruleChID ($rules.Get (toString $ruleNo))).Content}}
+		{{if gt (len $tempVar) 1870}}
+			{{sendMessage nil (slice $tempVar 0 1807)}}
+			{{sendMessage nil (slice $tempVar 1807)}}
+		{{else}}
+			{{sendMessage nil $tempVar}}
+		{{end}}
+		{{if $targetSet}}
+			{{/*execCC 504 nil 0 (sdict "targetID" ($args.Get 1) "opType" 1 "opString" (joinStr "" "Rule" $ruleNo "Warning") "modName" .User.Username "memoContent" "" "allUsers" $allUsers)*/}}
+		{{end}}
+	{{else}}
+		{{ execCC $cc nil 1 (sdict "arg" $arg "tries" 1 "targetID" (or ($args.Get 1) 0) "allUsers" $allUsers "targetSet" $targetSet)}}
+	{{end}}
+{{else}}
+	{{$doOnce:=false}}
+	{{$arg:=.ExecData.arg}}
+	{{$args:=.ExecData.args}}
+	{{$allUsers:=.ExecData.allUsers}}
+	{{$targetSet:=.ExecData.targetSet}}
+	{{if eq .ExecData.tries 1}}
+		{{if (reFind "(?i)(10|phobia|bully|sexism|discriminat|persecut|hate|hatred|denom|gender|raci|race|backbit)" $arg)}}
+			{{$ruleNo = 10}}
+		{{else if (reFind "(?i)(11|minor|mature|sfw|appropriate|sex|drug)" $arg)}}
+			{{$ruleNo = 11}}
+		{{else if (reFind "(?i)(12|spam|caps|react|shout|farm|xp|loud|pitch|reaction)" $arg)}}
+			{{$ruleNo = 12}}
+		{{else if (reFind "(?i)(13|troll|roleplay|larp|victim|stalk|hack|age)" $arg)}}
+			{{$ruleNo = 13}}
+		{{else if (reFind "(?i)(14|consent|convert|interest|willing)" $arg)}}
+			{{$ruleNo = 14}}
+		{{else if (reFind "(?i)(15|ping|mention|callmod)" $arg)}}
+			{{$ruleNo = 15}}
+		{{else if (reFind "(?i)(16|mute|jail|rehab|pass)" $arg)}}
+			{{$ruleNo = 16}}
+		{{else if (reFind "(?i)(17|misrepresent|misinform|lie|lying|faith)" $arg)}}
+			{{$ruleNo = 17}}
+		{{else if (reFind "(?i)(18|avatar|duplicate|profile|pfp|status|name|voice changer)" $arg)}}
+			{{$ruleNo = 18}}
+		{{else if (reFind "(?i)(19|dox|pii|personal|photo|selfie|address|phone number|virus|trojan|worm|scam)" $arg)}}
+			{{$ruleNo = 19}}
+		{{end}}
+	{{if $ruleNo}}
+		{{(getMessage $ruleChID ($rules.Get (toString $ruleNo))).Content}}
+		{{if $targetSet}}
+			{{/*execCC 504 nil 0 (sdict "targetID" .ExecData.targetID "opType" 1 "opString" (joinStr "" "Rule" $ruleNo "Warning") "modName" .User.Username "memoContent" "" "allUsers" $allUsers)*/}}		
+		{{end}}	
+	{{else}}
+		{{ execCC $cc nil 1 (sdict "arg" $arg "tries" 2 "targetID" .ExecData.targetID "allUsers" $allUsers "targetSet" $targetSet)}}
+	{{end}}
+	{{else}}
+		{{if (reFind "(?i)(20|advert|server|promote|website|invite)" $arg)}}
+			{{$ruleNo = 20}}
+		{{else if (reFind "(?i)(21|violen|terror|war|suicide|die|harm|threat|dark)" $arg)}}
+			{{$ruleNo = 21}}
+		{{else if (reFind "(?i)(22|nazi|fascist|socialist|semit|jew)" $arg)}}
+			{{$ruleNo = 22}}
+		{{else if (reFind "(?i)(23|circumvent|alt|avoid|joke|joking|evade|bans|ban)" $arg)}}
+			{{$ruleNo = 23}}	
+		{{end}}
+		{{if $ruleNo}}
+			{{(getMessage $ruleChID ($rules.Get (toString $ruleNo))).Content}}
+			{{if $targetSet}}
+				{{/*execCC 504 nil 0 (sdict "targetID" .ExecData.targetID "opType" 1 "opString" (joinStr "" "Rule" $ruleNo "Warning") "modName" .User.Username "memoContent" "" "allUsers" $allUsers)*/}}		
+			{{end}}
+		{{end}}
+	{{end}}
+{{end}}

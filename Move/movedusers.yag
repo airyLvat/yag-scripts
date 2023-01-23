@@ -1,0 +1,23 @@
+{{/* .* */}}
+
+{{/*This CC is a counterpart of the ^move CC. It deletes posts from moved users when they keep posting in the wrong channel*/}}
+{{$debugCh:=1029137217643356200}}
+{{$dbID:=21191}}
+{{$ruleCh:=1028495485113212968}}
+{{$chID:=(dbGet $dbID .User.ID)}}
+{{if and ($chID) (not .User.Bot)}}
+	{{if eq (toInt64 $chID.Value) $ruleCh}}
+		{{deleteTrigger 0}}
+		{{$hush := execAdmin "timeout" .User.ID "1m" "posting a channel other than the one you were moved to"}}
+		{{sendDM (joinStr "" "⛔ " .User.Mention " your message was deleted. You were moved to a channel you may not post in. ⛔")}}
+	{{else}}
+		{{if ne .Channel.ID (toInt64 $chID.Value)}}
+			{{deleteTrigger 0}}
+            {{$ch:= getChannel $chID.Value}}
+			{{$hush := execAdmin "timeout" .User.ID "1m" "posting a channel other than the one you were moved to"}}
+			{{sendDM (joinStr "" "⛔ " .User.Mention " your message in the channel named " .Channel.Name " was deleted. You were moved to the channel named " $ch.Name " so please take your messages to that channel. ⛔")}}
+		{{end}}
+	{{end}}
+{{else if not $chID}}
+	{{removeRoleID 1032775032239300618}}
+{{end}}

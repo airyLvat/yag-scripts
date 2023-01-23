@@ -1,0 +1,80 @@
+{{/* command: roleabuse */}}
+
+{{/*addReactions "yagpdb:505114640032858114"*/}}
+{{$allowedRole := 1028490891901554798 }}
+{{$allowedRole2 := 1028490891901554798}}
+{{$cmd:=""}}
+{{$roleToKeep := (cslice 
+					1029044503287443497
+					1029044570694111242
+					684274430343512124
+					1028727909021655091
+					1028728111988232292
+					664929932828344338
+					1029138615504207975
+					1028705335751487550
+					1028788169409314896
+					1028788096684277850
+					1029045439263146095
+					1029045546289205429
+					1028764596707803146
+                )}}
+{{/*$roleToGive := (cslice 666364696491851787)*/}} {{/* camo: commented this out because we only have one role to give and makes it easier for compatibility with auto fixing missing roles */}}
+{{/* -----------CODE--------------- */}}
+{{if .ExecData}}
+    {{$userID:=.ExecData.targetID}}
+    {{if and (not (targetHasRoleID $userID $allowedRole)) (not (targetHasRoleID $userID $allowedRole2)) (not .User.Bot)}} {{/* Won't run if target is a mod */}}
+    {{$userRoles:=(getMember $userID).Roles}}
+    {{$numRoles:=(len $userRoles)}}
+    {{$roleID:=0}}
+    {{giveRoleID $userID 1029350463524585574}} {{/* camo: added this BEFORE taking roles because we only have one role to give and makes it easier for compatibility with auto fixing missing roles */}}
+	{{range $idx:=seq 0 $numRoles}}
+        {{- $roleID = (toInt64 (index $userRoles $idx)) -}}
+        {{- if not (in $roleToKeep $roleID) -}}
+            {{- takeRoleID $userID $roleID -}}
+        {{- end -}}
+    {{end}}
+    {{/* camo: commented this out because we only have one role to give and makes it easier for compatibility with auto fixing missing roles */}}
+	{{/*$numRoles = (len $roleToGive)}} 
+    {{range $idx:=seq 0 $numRoles}}
+        {{$roleID = (toInt64 (index $roleToGive $idx))}}
+        {{giveRoleID $userID $roleID}}
+    {{end*/}}
+{{$placeholder1:=(getMember $userID).Nick}}
+{{if not $placeholder1}}{{$placeholder1 = (userArg $userID).Username}}{{end}}
+Adjusted {{$placeholder1}}'s roles !
+{{end}}
+{{else}}
+ 
+{{$args := parseArgs 1 "Syntax is `^roleabuse [@user]`"
+    (carg "userid" "user to be role-exempted")}}
+{{if or (hasRoleID $allowedRole) (hasRoleID $allowedRole2)}} {{/* Mod commands */}}
+    {{$userID:=($args.Get 0)}}
+    {{if and (not (targetHasRoleID $userID $allowedRole)) (not (targetHasRoleID $userID $allowedRole2))}} {{/* Won't run if target is a mod */}}
+    {{$userRoles:=(getMember $userID).Roles}}
+    {{$numRoles:=(len $userRoles)}}
+    {{$text1:="Removing roles: "}}
+    {{sendMessage nil (joinStr "" "Removing " $numRoles " roles " "<a:LoadingAnim:834710843568422963>")}}
+    {{$roleID:=0}}
+    {{giveRoleID $userID 1029350463524585574}}
+	{{range $idx:=seq 0 $numRoles}}
+        {{- $roleID = (toInt64 (index $userRoles $idx)) -}}
+        {{- if not (in $roleToKeep $roleID) -}}
+            {{- takeRoleID $userID $roleID -}}
+        {{- end -}}
+    {{end}}
+    {{/* camo: commented this out because we only have one role to give and makes it easier for compatibility with auto fixing missing roles */}}
+	{{/*$numRoles = (len $roleToGive)}} 
+    {{range $idx:=seq 0 $numRoles}}
+        {{$roleID = (toInt64 (index $roleToGive $idx))}}
+        {{giveRoleID $userID $roleID}}
+    {{end*/}}
+{{$cmd = "RoleAbuse"}}	
+{{$placeholder1:=(getMember $userID).Nick}}
+{{$placeholder2:= ($args.Get 0) }}	
+{{if not $placeholder1}}{{$placeholder1 = (userArg $userID).Username}}{{end}}
+Adjusted {{$placeholder1}}'s roles !
+
+{{end}}
+{{end}}
+{{end}}

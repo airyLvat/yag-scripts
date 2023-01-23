@@ -1,0 +1,9 @@
+{{if .Reason}}{{.Reason}}{{end}}
+
+{{$count := 5 }}
+{{$channel_ID := 1060699578191577099}}
+{{$warns_count := toInt (reFind `\d+` (execAdmin "Warnings" .User.ID).Description)}}
+
+{{if eq (toInt (mod $warns_count $count)) 0}}
+    {{sendMessage $channel_ID (joinStr "" "User " .User.Username " (" .User.ID ") has had `" $warns_count "` warnings. Run the following to see them\n`^warnings " .User.ID "`")}}
+{{end}}

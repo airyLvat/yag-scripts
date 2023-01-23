@@ -1,0 +1,243 @@
+{{/* command: hug */}}
+
+{{$cooldownExempt := (cslice
+	1028490891901554798
+	1028549391306469376           
+)}}
+{{$checkCooldown:=true}}
+{{$runIt:=true}}
+{{range $cooldownExempt }}
+    {{if hasRoleID .}}
+        {{$checkCooldown = false}}
+    {{end}}
+{{end}}
+ 
+{{if $checkCooldown}}
+    {{$global := 0}}
+    {{$name := (joinStr "-" "cooldown" .CCID)}}
+    {{$length := 20}}
+    {{$announce := 1}}
+    {{if eq $global 0}}{{$global = .User.ID}}{{else}}{{$global = (toInt64 0)}}{{end}}
+    {{if (dbGet $global $name)}}
+        {{if eq $announce 1}}
+           {{$msgID:=""}} {{$link:=""}}  :warning: Command number {{.CCID}} is still on cooldown for: {{humanizeDurationSeconds ((dbGet $global $name).ExpiresAt.Sub currentTime)}}. 
+	   {{deleteResponse 20}}
+	   {{$msgID:=sendMessageRetID nil $link}}
+	   {{deleteMessage nil $msgID 20}}
+	{{end}}
+	{{$runIt = false}}
+    {{else}}{{dbSetExpire $global $name "cooldown" $length}}
+    {{end}}
+{{end}}
+{{if $runIt}}
+{{$numargs:=(len .CmdArgs)}}
+{{ $out:="" }}
+{{$recipient:=""}}
+{{ $action:=""}}
+{{$recipientCount:="single"}}
+{{$placeholder:=""}}
+{{$targetCounter:=0}}
+{{$userID:=.User.ID}}
+{{deleteResponse 15}}
+{{if lt $numargs 1}}
+	Syntax: ```^hug/bearhug [@users] (max 7 people)```
+{{else}}
+	{{ range $x,$element := .CmdArgs}} 
+		{{if and (reFind "everyone" $element ) (lt $targetCounter 7)}}
+			{{$placeholder = "everyone else in the server"}}
+			{{$targetCounter = add $targetCounter 1}}
+		{{else}}
+			{{$temp1:=(getMember $element)}}
+			{{if and $temp1 (lt $targetCounter 7)}}
+				{{$targetCounter = add $targetCounter 1}}
+				{{if $temp1.Nick}}{{$placeholder = $temp1.Nick}}{{else}}{{$placeholder = $temp1.User.Username}}{{end}}
+				{{if eq $temp1.User.ID $userID}} {{$placeholder = "themselves"}} {{end}}
+			{{else}}{{$placeholder = ""}}{{/*$placeholder = (joinStr " " "a" noun)*/}}
+			{{end}}
+		{{end}}
+		{{if $placeholder}}{{$recipient = joinStr ", " $recipient $placeholder}}{{end}}
+	{{end}}
+	{{if gt $targetCounter 0}}
+	{{$group1:=" gives "}}	
+	{{$group2:=""}}
+	{{if gt $targetCounter 1}}
+		{{$recipientCount = "many"}}
+		{{$group1 = " throws "}}		
+		{{$group2 = "group "}}
+	{{end}}	
+	{{if (reFind "bear" (index .Args 0)) }}	
+		{{$action = joinStr "" $action $group1 "a big, warm, fluffy, marshmallowy " $group2 "bearhug to"}}
+	{{else}}
+		{{$action = joinStr "" $action $group1 "a " $group2 "hug to"}}
+	{{end}}
+{{$iconDB:=sdict
+	"single" (cslice
+		"https://i.imgur.com/y45O6gA.png"
+		"https://i.imgur.com/OUTFFto.png"
+		"https://i.imgur.com/1HitNcd.png"
+		"https://i.imgur.com/ye3gHw6.gif"
+		"https://i.imgur.com/UCNVJxg.gif"
+		"https://i.imgur.com/2r1hcTs.gif"
+		"https://i.imgur.com/VBMaawu.gif"
+		"https://i.imgur.com/AtOKbqO.gif"
+		"https://i.imgur.com/WhN5KI8.gif"
+		"https://i.imgur.com/sdQqZf4.gif"
+		"https://i.imgur.com/clpXaS8.gif"
+		"https://i.imgur.com/RzqWCRE.gif"
+		"https://i.imgur.com/Nvoem7o.jpg"
+		"https://i.imgur.com/0xKIdEn.jpg"
+		"https://i.imgur.com/9kSW2eK.jpg"
+		"https://i.imgur.com/WMfHoHL.jpg"
+		"https://i.imgur.com/DaHDBhB.jpg"
+		"https://i.imgur.com/2bsUQqq.jpg"
+		"https://i.imgur.com/TPPZHtV.jpg"
+		"https://i.imgur.com/BF4rPXC.jpg"
+		"https://i.imgur.com/cdeJwrY.jpg"
+		"https://i.imgur.com/LgUIV6S.png"
+		"https://i.imgur.com/46IR7LK.jpg"
+		"https://i.imgur.com/yUyY6Az.gif"
+		"https://i.imgur.com/WOfTWNH.jpg"
+		"https://i.imgur.com/WawF0wa.jpg"
+		"https://i.imgur.com/u6o1dy4.jpg"
+		"https://i.imgur.com/e68Wwhq.jpg"
+		"https://i.imgur.com/5iuwiNw.jpg"
+		"https://i.imgur.com/0VHmN6T.jpg"
+		"https://i.imgur.com/L8qhpDF.jpg"
+		"https://i.imgur.com/YDJXSXv.jpg"
+		"https://i.imgur.com/ATKdD74.jpg"
+		"https://i.imgur.com/l4m4D6T.jpg"
+		"https://i.imgur.com/2FXtpjf.jpg"
+		"https://i.imgur.com/kFQjAGc.jpg"
+		"https://i.imgur.com/c18A6Ur.jpg"
+		"https://i.imgur.com/UpZpbYN.jpg"
+		"https://i.imgur.com/us71AEk.jpg"
+		"https://i.imgur.com/62wmS0o.jpg"
+		"https://i.imgur.com/cB1nXV2.png"
+		"https://i.imgur.com/c8gXnXg.png"
+		"https://i.imgur.com/hKI6acD.jpg"
+		"https://i.imgur.com/2SwapFr.jpg"
+		"https://i.imgur.com/y95A2nv.jpg"
+		"https://i.imgur.com/efTTOc4.jpg"
+		"https://i.imgur.com/5Qmh45P.gif"
+		"https://i.imgur.com/icUP9RI.jpg"
+		"https://i.imgur.com/T9S4mcV.jpg"
+		"https://i.imgur.com/5qGRxQk.jpg"
+		"https://i.imgur.com/2RDULyP.gif"
+		"https://i.imgur.com/XzrvIOB.jpg"
+		"https://i.imgur.com/ooEUPw0.jpg"
+		"https://i.imgur.com/ThNxcxs.jpg"
+		"https://i.imgur.com/JUnebsk.jpg"
+		"https://i.imgur.com/Wp0K0eA.jpg"
+		"https://i.imgur.com/vVSp9sm.gif"
+		"https://i.imgur.com/KRCv6uB.jpg"
+		"https://i.imgur.com/3mMpkrt.jpg"
+		"https://i.imgur.com/L9LPBAD.jpg"
+		"https://i.imgur.com/VusDrva.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/906077627889115166/sending-hugs-virtual-hugs.gif"
+		) 
+	"many" (cslice 
+		"https://i.imgur.com/t7KnRwG.jpeg"
+		"https://i.imgur.com/FjCdAAJ.jpg"
+		"https://i.imgur.com/3dkmNKL.gif"
+		"https://i.imgur.com/olHFicj.jpg"
+		"https://i.imgur.com/UrDW0h8.jpg" 
+		"https://i.imgur.com/rbofFa1.jpg"
+		"https://i.imgur.com/lk0DgaG.png"
+		"https://i.imgur.com/bTx4L1Q.jpg"
+		"https://i.imgur.com/UrWgWiE.jpg"
+		"https://i.imgur.com/IpYEcsb.jpg"
+		"https://i.imgur.com/f0zwwBJ.jpg"
+		"https://i.imgur.com/vRhB7VC.png"
+		"https://i.imgur.com/Ittaf4c.jpg"
+		"https://i.imgur.com/s0FiJ0f.jpg"
+		"https://i.imgur.com/TUcCGLd.png"
+		"https://i.imgur.com/Lx76FoM.jpg"
+		"https://i.imgur.com/akWZ53g.jpg"
+		"https://i.imgur.com/Bp4h6mB.png"
+		"https://i.imgur.com/SdTdNzS.jpg"
+		"https://i.imgur.com/juJNOig.jpg"
+		"https://i.imgur.com/BzlpCLf.gif"
+		"https://i.imgur.com/KCCpQmJ.gif"
+		"https://i.imgur.com/eBP5IDc.gif"
+		"https://i.imgur.com/MYoidko.gif"
+		"https://i.imgur.com/TuJo893.jpg"
+		)
+}}
+{{$sayDB:=(cslice 
+	"and says \"you matter to me\"" 
+	"and says \"everything will be alright\"" 
+	"and says \"I'm here for you !\"" 
+	"and gives freshly-baked homemade cookies"
+	"and shares their favourite verse with them" 
+	"and gives them a snack"
+	"and gives them a Roblox gift card"
+	"and gives them something" 	 	
+	"and gives them a poke" 	
+	"and tickles them" 	
+	"and winks at them" 	
+	"and smiles at them" 	
+	"and says \"I hope this isn't weird aha\"" 
+	"and says \"When was the last time we hugged?\"" 
+	"and says \"I'll risk cooties for you\"" 
+	"and says \"You're so nice!\"" 
+	"and says \"You're an awesome friend!\"" 
+	"and says \"What do you like to do on the weekend?\"" 
+	"and says \"you made my day a little more wholesome\""
+	"and says \"you mean the world to me, my friend\""
+	"and says \"Therefore comfort each other and edify one another, just as you also are doing. - 1 Thessalonians 5:11\""
+	"and says \"How are you friend?\""
+	"and says \"I hope you had a good week!\""
+	"and says \"Have a lovely day or night!\""
+	"and says \"Always a good time for a hug!\""
+	"and says \"Hug time!\""
+	"and says \"You guys are so wholesome!\""
+	"and says \"Let's hangout sometime maybe!\""
+	"and says \"you're wonderful!\"" 
+	"and says \"Jesus loves you!\"" 
+	"and says \"Thanks for existing!\"" 
+	"and says \"You're a ray of sunshine\"" 
+	"and says \"nothing\"" 
+	"and gives them a present" 
+	"and gives them a bible"
+	"and shakes their hand"
+	"and gives them a high five" 	
+	"and gives them flowers" 
+	"and gives them chocolate" 
+	"and gives them ice cream"
+	"and pats them on the back" 
+	"and sings them a song" 
+	"and tells them about their day" 
+	"and dances with them"
+	"and jumps on a trampoline" 
+	"and gives a motivational speech" 
+	"and pinches their cheeks" 
+	", gives a bear hug and twirls around like the sound of music" 
+	"and hosts a TED talk"
+	"and yawns" 
+	"and says i'm glad I met you"
+	"and says nothing else because sometimes in life we just need a hug"
+	"and says I wish I could give you a real hug.."
+	)
+}}
+{{$var := randInt (len $sayDB)}}
+{{$say:=(index $sayDB $var)}}
+{{$iconSlice:=$iconDB.Get $recipientCount}}
+{{$var = randInt (len $iconSlice)}}
+{{$icon:=(index $iconSlice $var)}}
+{{$placeholder = .Member.Nick}}
+{{if not $placeholder}}{{$placeholder = .User.Username}}{{end}}
+{{$out = joinStr " " $placeholder $action $recipient $say}}
+{{$title:="A warm hug is happening !"}}
+{{if (reFind "bear" (index .Args 0)) }} {{$title = "BEARHUG TIME   <a:BearHugAnim:879628485394575360>"}}{{end}} 	
+ 
+{{ sendMessage nil (cembed
+		"description" $out
+		"thumbnail" (sdict "url" $icon)
+		"color" 8864206
+		"title" ($title)
+	) }}
+{{else}}
+	Syntax: ```^hug/bearhug [@users] (max 7 people)```
+{{end}}
+{{end}}
+{{end}}

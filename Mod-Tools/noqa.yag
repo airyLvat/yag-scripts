@@ -1,0 +1,27 @@
+{{/* command: noqa */}}
+
+{{$allowedRole := 1029105006508519556 }}
+{{$allowedRole2 := 1028490891901554798}}
+{{$noQaRole := 1029397658793680946}}
+ 
+{{$args := parseArgs 1 "Syntax is `^noqa [@user]`"
+    (carg "userid" "user to be removed from QA")}}
+{{if or (hasRoleID $allowedRole) (hasRoleID $allowedRole2)}} {{/* Mod commands */}}
+    {{$userID:=($args.Get 0)}}
+	{{$auditCh := 1029137217643356200}}
+	{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ")")}}
+    {{if and (not (targetHasRoleID $userID $allowedRole)) (not (targetHasRoleID $userID $allowedRole2))}} {{/* Won't run if target is a mod */}}
+        {{$placeholder1:=(getMember $userID).Nick}}    
+        {{if not $placeholder1}}
+            {{$placeholder1 = (userArg $userID).Username}}
+        {{end}}
+
+        {{if (targetHasRoleID $userID $noQaRole)}}
+            {{takeRoleID $userID $noQaRole}}
+            Adjusted {{$placeholder1}}'s roles. They may now participate in Q/A channels.
+        {{else}}
+            {{giveRoleID $userID $noQaRole}}
+            Adjusted {{$placeholder1}}'s roles. They no longer have access to Q/A channels.
+        {{end}}
+    {{end}}
+{{end}}

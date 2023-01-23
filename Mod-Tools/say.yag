@@ -1,0 +1,11 @@
+{{/* command: say */}}
+
+{{$allowedRole := 1029105006508519556}}
+
+{{if or (hasRoleID $allowedRole)}} {{/* Admins only */}}
+	{{$args := parseArgs 2 "Syntax is <channel> <text>"
+		(carg "channel" "channel to send to")
+		(carg "string" "text to send")}}
+	{{sendMessage ($args.Get 0).ID ($args.Get 1)}}
+	{{addReactions "✅"}}
+{{end}}

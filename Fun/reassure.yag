@@ -1,0 +1,99 @@
+{{/* command: reassure */}}
+
+{{$numargs:=(len .CmdArgs)}}
+{{if and (gt $numargs 0) (lt $numargs 3)}}
+	{{$mode:=""}}
+	{{$user:=((userArg (index .CmdArgs 0)).Username)}}
+	{{if eq $numargs 1}}
+		{{$mode = "love"}}
+	{{else if eq $numargs 2}}
+		{{$mode = (lower (index .CmdArgs 1))}}
+	{{end}}
+	{{$iconDB:=sdict 
+		"strength" "https://turningpointct.org/wp-content/uploads/2018/03/Strength-in-SWOT-analysis.jpg" 
+		"love" "https://factsandtrends.net/wp-content/uploads/2018/02/LOVE-love-36983825-1680-1050.jpg" 
+		"anxiety" "https://i.ytimg.com/vi/Uld9c2IoMDE/maxresdefault.jpg"
+	}}
+	{{$colorDB:=sdict "strength" 16718884 "love" 16711927 "anxiety" 3884497}}
+	{{$sayDB:=sdict 
+		"strength" (joinStr " " "The struggle you're in today is developing the strength you need for tomorrow. Hang in there" $user) 
+		"love" (joinStr " " "You are infinitely loved by God the creator of our whole universe," $user) 
+		"anxiety" (joinStr " " "Do not worry nor fear," $user ".Bring your anxieties to God and let Him give you peace.")
+	}}
+	{{$verseDB:=sdict 
+		"strength" (cslice 
+			"[Philippians 4:13] I can do all things through Christ which strengtheneth me." 
+			"[Isaiah 41:10] Fear thou not; for I am with thee: be not dismayed; for I am thy God: I will strengthen thee; yea, I will help thee; yea, I will uphold thee with the right hand of my righteousness." 
+			"[Deuteronomy 31:6] Be strong and of a good courage, fear not, nor be afraid of them: for the Lord thy God, he it is that doth go with thee; he will not fail thee, nor forsake thee." 
+			"[Isaiah 40:31] But they that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint." 
+			"[Exodus 15:2] The Lord is my strength and song, and he is become my salvation: he is my God, and I will prepare him an habitation; my father's God, and I will exalt him."
+			"[Ephesians 6:10] Finally, my brethren, be strong in the Lord, and in the power of his might." 
+			"[Deuteronomy 20:4] For the Lord your God is he that goeth with you, to fight for you against your enemies, to save you." 
+			"[2 Corinthians 12:10] Therefore I take pleasure in infirmities, in reproaches, in necessities, in persecutions, in distresses for Christ's sake: for when I am weak, then am I strong." 
+			"[Joshua 1:9] Have not I commanded thee? Be strong and of a good courage; be not afraid, neither be thou dismayed: for the Lord thy God is with thee whithersoever thou goest." 
+			"[2 Timothy 1:7] For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind." 
+			"[Isaiah 12:2] Behold, God is my salvation; I will trust, and not be afraid: for the Lord Jehovah is my strength and my song; he also is become my salvation." 
+			"[Isaiah 40:29] He giveth power to the faint; and to them that have no might he increaseth strength." 
+			"[Psalm 27:1] The Lord is my light and my salvation; whom shall I fear? the Lord is the strength of my life; of whom shall I be afraid?" 
+			"[Psalm 31:24] Be of good courage, and he shall strengthen your heart, all ye that hope in the Lord." 
+			"[Psalm 73:26] My flesh and my heart faileth: but God is the strength of my heart, and my portion for ever." 
+			"[Habakkuk 3:19] The Lord God is my strength, and he will make my feet like hinds' feet, and he will make me to walk upon mine high places. To the chief singer on my stringed instruments." 
+			"[Psalm 23:4] Yea, though I walk through the valley of the shadow of death, I will fear no evil: for thou art with me; thy rod and thy staff they comfort me." 
+			"[Psalm 118:14 ] The Lord is my strength and song, and is become my salvation."
+		)
+		"love" (cslice 
+			"[John 3:16] For God so loved the world, that he gave his only begotten Son, that whosoever believeth in him should not perish, but have everlasting life." 
+			"[Romans 8:28] And we know that all things work together for good to them that love God, to them who are the called according to his purpose." 
+			"[Romans 8:38–39]  For I am persuaded, that neither death, nor life, nor angels, nor principalities, nor powers, nor things present, nor things to come, nor height, nor depth, nor any other creature, shall be able to separate us from the love of God, which is in Christ Jesus our Lord." 
+			"[Romans 5:8] But God commendeth his love toward us, in that, while we were yet sinners, Christ died for us." 
+			"[1 John 4:16] And we have known and believed the love that God hath to us. God is love; and he that dwelleth in love dwelleth in God, and God in him." 
+			"[1 John 4:10] Herein is love, not that we loved God, but that he loved us, and sent his Son to be the propitiation for our sins." 
+			"[Psalm 147:3] He healeth the broken in heart, and bindeth up their wounds." 
+			"[Psalm 103:8] The Lord is merciful and gracious, slow to anger, and plenteous in mercy." 
+			"[1 John 3:1] Behold, what manner of love the Father hath bestowed upon us, that we should be called the sons of God: therefore the world knoweth us not, because it knew him not." 
+			"[Deuteronomy 7:9] Know therefore that the Lord thy God, he is God, the faithful God, which keepeth covenant and mercy with them that love him and keep his commandments to a thousand generations;" 
+			"[Psalm 63:3] Because thy lovingkindness is better than life, my lips shall praise thee." 
+			"[Jeremiah 29:11] For I know the thoughts that I think toward you, saith the Lord, thoughts of peace, and not of evil, to give you an expected end." 
+			"[1 John 3:16] Hereby perceive we the love of God, because he laid down his life for us: and we ought to lay down our lives for the brethren." 
+			"[2 Chronicles 6:14] And said, O Lord God of Israel, there is no God like thee in the heaven, nor in the earth; which keepest covenant, and shewest mercy unto thy servants, that walk before thee with all their hearts." 
+			"[Galatians 2:20] I am crucified with Christ: nevertheless I live; yet not I, but Christ liveth in me: and the life which I now live in the flesh I live by the faith of the Son of God, who loved me, and gave himself for me."
+		)
+		"anxiety" (cslice 
+			"[John 14:27] Peace I leave with you, my peace I give unto you: not as the world giveth, give I unto you. Let not your heart be troubled, neither let it be afraid." 
+			"[Romans 15:13] Now the God of hope fill you with all joy and peace in believing, that ye may abound in hope, through the power of the Holy Ghost." 
+			"[Romans 12:12] Rejoicing in hope; patient in tribulation; continuing instant in prayer;" 
+			"[John 16:24] Hitherto have ye asked nothing in my name: ask, and ye shall receive, that your joy may be full." 
+			"[Psalm 30:5] For his anger endureth but a moment; in his favour is life: weeping may endure for a night, but joy cometh in the morning." 
+			"[1 Thessalonians 5:16-18] Rejoice evermore. Pray without ceasing. In every thing give thanks: for this is the will of God in Christ Jesus concerning you." 
+			"[Proverbs 10:28] The hope of the righteous shall be gladness: but the expectation of the wicked shall perish." 
+			"[1 Peter 3:14] But and if ye suffer for righteousness' sake, happy are ye: and be not afraid of their terror, neither be troubled;" 
+			"[2 Timothy 1:7] For God hath not given us the spirit of fear; but of power, and of love, and of a sound mind." 
+			"[Isaiah 40:31] But they that wait upon the Lord shall renew their strength; they shall mount up with wings as eagles; they shall run, and not be weary; and they shall walk, and not faint." 
+			"[John 14:1] Let not your heart be troubled: ye believe in God, believe also in me." 
+			"[Luke 12:22] And he said unto his disciples, Therefore I say unto you, Take no thought for your life, what ye shall eat; neither for the body, what ye shall put on." 
+			"[Matthew 6:25-34] Take therefore no thought for the morrow: for the morrow shall take thought for the things of itself. Sufficient unto the day is the evil thereof." 
+			"[Psalm 34:4] I sought the Lord, and he heard me, and delivered me from all my fears." 
+			"[Psalm 94:19] In the multitude of my thoughts within me thy comforts delight my soul." 
+			"[Psalm 138:8] The Lord will perfect that which concerneth me: thy mercy, O Lord, endureth for ever: forsake not the works of thine own hands." 
+			"[Proverbs 3:5-6] Trust in the Lord with all thine heart; and lean not unto thine own understanding. In all thy ways acknowledge him, and he shall direct thy paths." 
+			"[Philippians 4:6-7] Be careful for nothing; but in every thing by prayer and supplication with thanksgiving let your requests be made known unto God. And the peace of God, which passeth all understanding, shall keep your hearts and minds through Christ Jesus." 
+			"[Luke 12:24-25] Consider the ravens: for they neither sow nor reap; which neither have storehouse nor barn; and God feedeth them: how much more are ye better than the fowls? And which of you with taking thought can add to his stature one cubit?" 
+			"[Matthew 11:28] Come unto me, all ye that labour and are heavy laden, and I will give you rest."
+			"[2 Thessalonians 3:16] Now the Lord of peace himself give you peace always by all means. The Lord be with you all."
+		)
+	}}
+	{{$color:=$colorDB.Get $mode}}
+	{{$say:=$sayDB.Get $mode}}
+	{{$verseSlice:=$verseDB.Get $mode}}
+	{{$verseIdx:=randInt 0 (len $verseSlice)}}
+	{{$verse:=(joinStr "" "*" (index $verseSlice $verseIdx) "*")}}	
+	{{$icon:=$iconDB.Get $mode}}
+	{{sendMessage nil (cembed
+		"description" (joinStr "\n" $say $verse)
+		"thumbnail" (sdict "url" $icon)
+		"color" $color
+		"title" ("__Be reassured through the word of God !__")	
+	)}}
+{{else}}
+	Syntax: ```^reassure/inspire [@user] [option: strength/love/anxiety]```
+{{end}}

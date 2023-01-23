@@ -1,0 +1,142 @@
+{{/* ^\^\b(socialcredit|socialcreditscore|toprep|topcredit|topsocialcredit|topsocialcreditscore|topscore|kiss|holykiss|kith|bonk)\b */}}
+
+{{if and (reFind "\\b(?i)(socialcredit|socialcreditscore)\\b" .Cmd)}}
+	{{$user := .User }}
+	{{if .Message.Mentions}}
+		{{$user = userArg (index .Message.Mentions 0)}}
+		{{exec "rep" $user}}
+	{{else}}
+		{{exec "rep"}}
+	{{end}}	
+{{else if and (reFind "\\b(?i)(toprep|topcredit|topsocialcredit|topsocialcreditscore|topscore)\\b" .Cmd)}}
+	{{$chinaMode:=false}}
+	{{if $chinaMode}}
+		{{$x:=exec "toprep"}}{{$x =structToSdict $x}}{{$x.Set "title" "Social Credit Score"}}{{sendMessage nil (cembed $x)}}
+	{{else}}
+		{{$toprep := exec "toprep"}}
+		{{sendMessage nil $toprep}}
+	{{end}}
+{{else if and (reFind "(?i)(kiss|holykiss|kith)" .Cmd)}}
+	{{$cooldownExempt := (cslice
+						1028362194972327991
+	)}}
+	{{$checkCooldown:=true}}
+	{{$runIt:=true}}
+	{{range $cooldownExempt }}
+		{{if hasRoleID .}}
+			{{$checkCooldown = false}}
+		{{end}}
+	{{end}}
+	{{if $checkCooldown}}
+		{{$global := 1}}
+		{{$name := (joinStr "-" "cooldown" .CCID)}}
+		{{$length := 30}}
+		{{$announce := 1}}
+		{{if eq $global 0}}{{$global = .User.ID}}{{else}}{{$global = (toInt64 0)}}{{end}}
+		{{if (dbGet $global $name)}}
+			{{if eq $announce 1}}
+				  {{$msgID:=""}} {{$link:=""}} :warning: Holy Kiss is still on cooldown for: {{humanizeDurationSeconds ((dbGet $global $name).ExpiresAt.Sub currentTime)}}. 
+			  {{deleteResponse 20}}
+			  {{$msgID:=sendMessageRetID nil $link}}
+			  {{deleteMessage nil $msgID 20}}
+		{{end}}
+		{{$runIt = false}}
+		{{else}}{{dbSetExpire $global $name "cooldown" $length}}
+		{{end}}
+	{{end}}
+
+	{{if $runIt}}
+		{{$rep :=  -1}} 
+		{{$chinaMode := false}}
+		{{with reFindAllSubmatches `\A.*\*\*(\d+)\*\* .+? \(#\*\*(?:\d+|#ω)\*\*\)\z` (exec "rep" .User)}}{{$rep = toInt (index . 0 1)}}{{end}}
+		{{if ge $rep 25}}
+			{{$targetID:=cslice 592877356473909259}}
+			{{$idx:=randInt (len $targetID)}}
+			{{$name1:=.Member.Nick}}
+			{{if not $name1}}{{$name1 = .User.Username}}{{end}}
+				{{$user2:=getMember (index $targetID $idx)}}
+				{{$name2:=$user2.Nick}}
+			{{if not $name2}}{{$name2 = $user2.User.Username}}{{end}}
+				{{$name1}} gives {{$name2}} a holy kiss !
+		{{else}}
+			{{if $chinaMode}}
+				{{sendMessage .Channel.ID "You're not popular enough to kiss people, a minimum social credit score of **25** is required!! <:3DSad:690701930413948938>"}}
+			{{else}}
+				{{sendMessage .Channel.ID "You're not popular enough to kiss people, a minimum of **25** rep is required!! <:3DSad:690701930413948938>"}}
+			{{end}}	
+		{{end}}
+	{{end}}	
+{{else if and (reFind "(?i)(bonk)" .Cmd)}}	
+	{{$args := parseArgs 1 "Syntax is `^bonk [@user]`"
+			(carg "userid" "user to be bonked")
+		 }}
+		{{$cooldownExempt := (cslice
+				1029105006508519556
+                1029106935460532304
+		)}}
+		{{$checkCooldown:=true}}
+		{{$runIt:=true}}
+		{{range $cooldownExempt }}
+			{{if hasRoleID .}}
+				{{$checkCooldown = false}}
+			{{end}}
+		{{end}}
+		{{if $checkCooldown}}
+			{{$global := 0}}
+			{{$name := "bonk"}}
+			{{$length := 30}}
+			{{$announce := 1}}
+			{{if eq $global 0}}{{$global = .User.ID}}{{else}}{{$global = (toInt64 0)}}{{end}}
+			{{if (dbGet $global $name)}}
+				{{if eq $announce 1}}
+						   {{$msgID:=""}} {{$link:=""}} :warning: Bonk is still on cooldown for: {{humanizeDurationSeconds ((dbGet $global $name).ExpiresAt.Sub currentTime)}}. 
+				  {{deleteResponse 20}}
+				  {{$msgID:=sendMessageRetID nil $link}}
+				  {{deleteMessage nil $msgID 20}}
+			{{end}}
+			{{$runIt = false}}
+			{{else}}{{dbSetExpire $global $name "cooldown" $length}}
+			{{end}}
+		{{end}}
+		{{if $runIt}}
+			{{$rep :=  -1}} 
+			{{$chinaMode := false}}
+			{{with reFindAllSubmatches `\A.*\*\*(\d+)\*\* .+? \(#\*\*(?:\d+|#ω)\*\*\)\z` (exec "rep" .User)}}{{$rep = toInt (index . 0 1)}}{{end}}
+			{{if ge $rep 0}}
+				{{$bonkDB:=cslice "<a:PepeBonkAnim:846692831085985802>" "<a:BonkCatAnim:695276972556812344>" "<a:BonkDogeAnim:752753870085685289>" "<a:Bonk1:801357467636072459>" "<a:Bonk2:801357466792624148>" "<a:Bonk3:801357466377650186>" "<a:Bonk4:801357466309754930>" "<a:Bonk5:801357466143162410>"}}
+                {{$nounDB:=cslice "cactus" "fish" "tube of toothpaste" "saxophone" "pancake" "water bottle" "fancy duck" "kettle" "flag" "onion" "DVD" "hat" "spoon" "sticker" "crab apple" "unspecified secret item" "chicken" "Rev Mike" "buffalo" "car" "grease" "monkey" "towel" "state" "coffee" "muffin" "pillow" "tooth" "beard" "cheese" "video" "shoe" "lizard" "bird" "store" "grandma" "fly" "building" "stop sign" "carrot" "worm" "feather" "trout" "mayonnaise" "ketchup" "steak" "radar" "radio" "jump rope" "goose" "cat" "dog" "fish tank" "chef" "taxi" "cook" "policeman" "theory" "brain" "satellite" "clown" "dish" "slime" "rat" "stinky shoe" "pretzel" "handkerchief" "soap" "lawyer" "warehouse" "planet" "eyebrow" "nose" "salmon" "bear" "ant" "waterfall" "bacon" "leaf" "loaf"}}
+				{{$bonk:=index $bonkDB (randInt 0 (len $bonkDB))}}
+				{{$placeholder:=(getMember .User.ID).Nick}}
+				{{if not $placeholder}}{{$placeholder = (userArg .User.ID).Username}}{{end}}
+					{{$modrole:=1028362194972327991}}
+					{{$adminrole:=0}}
+					{{$princerole:=0}}
+					{{$princessrole:=0}}
+					{{$odprole:=0}}
+					{{$target:=($args.Get 0)}}
+					{{$noun:=index $nounDB (randInt 0 (len $nounDB))}}
+					{{$aan:="a"}}
+					{{$user2:=getMember $target}}
+					{{$name2:=$user2.Nick}}
+				{{if not $name2}}{{$name2 = $user2.User.Username}}{{end}}
+				{{if (reFind "^(a|i|u|e|o)" $noun)}}{{$aan = "an"}}{{end}}
+				{{if and (not (hasRoleID $modrole)) (not (hasRoleID $adminrole)) (targetHasRoleID $target $modrole) (ne .Channel.ID 666928239108947988)  }}
+					{{$placeholder}} bonks themselves with {{$aan}} {{$noun}} {{$bonk}} !
+				{{else if and (not (hasRoleID $adminrole)) (targetHasRoleID $target $adminrole) }}
+					{{$placeholder}} bonks themselves after going super saiyan with {{$aan}} {{$noun}} {{$bonk}} !
+				{{else if and (not (hasRoleID $adminrole)) (not (targetHasRoleID $target $modrole)) (targetHasRoleID $target $princerole) (targetHasRoleID $target $odprole) }}
+					{{$placeholder}} bonks themselves after going super saiyan with {{$aan}} {{$noun}} {{$bonk}} !
+				{{else if and (not (hasRoleID $adminrole)) (not (targetHasRoleID $target $modrole)) (targetHasRoleID $target $princessrole) (targetHasRoleID $target $odprole) }}
+					{{$placeholder}} bonks themselves after going super saiyan with {{$aan}} {{$noun}} {{$bonk}} !
+				{{else}}
+					{{$placeholder}} bonks {{$name2}} with {{$aan}} {{$noun}} {{$bonk}} !
+				{{end}}
+			{{else}}
+				{{if $chinaMode}}
+					{{sendMessage .Channel.ID "You're not popular enough to bonk people, a minimum social credit score of **25** is required!! <:3DSad:690701930413948938>"}}
+				{{else}}
+					{{sendMessage .Channel.ID "You're not popular enough to bonk people, a minimum of **25** rep is required!! <:3DSad:690701930413948938>"}}
+				{{end}}	
+			{{end}}	
+		{{end}}
+{{end}}

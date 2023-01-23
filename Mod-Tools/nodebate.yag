@@ -1,0 +1,43 @@
+{{/* command: nodebate */}}
+
+{{$allowedRole := 1029105006508519556 }}
+{{$allowedRole2 := 1028490891901554798}}
+{{$rolesToTake := (cslice 
+					1028788096684277850
+					1028788169409314896
+                )}}
+{{$noDebateRole := 1029138615504207975}}
+ 
+{{/* -----------CODE--------------- */}}
+{{$args := parseArgs 1 "Syntax is `^nodebate [@user]`"
+    (carg "userid" "user to be removed from debate and serious topics access")}}
+{{if or (hasRoleID $allowedRole) (hasRoleID $allowedRole2)}} {{/* Mod commands */}}
+    {{$userID:=($args.Get 0)}}
+	{{$auditCh := 1029137217643356200}}
+	{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ")")}}
+    {{if and (not (targetHasRoleID $userID $allowedRole)) (not (targetHasRoleID $userID $allowedRole2))}} {{/* Won't run if target is a mod */}}
+        {{$placeholder1:=(getMember $userID).Nick}}    
+        {{if not $placeholder1}}
+            {{$placeholder1 = (userArg $userID).Username}}
+        {{end}}
+
+        {{if (targetHasRoleID $userID $noDebateRole)}}
+            {{takeRoleID $userID $noDebateRole}}
+            Adjusted {{$placeholder1}}'s roles. They may now go get access to debate and serious topic channels again.
+        {{else}}
+            {{$userRoles:=(getMember $userID).Roles}}
+            {{$numRoles:=(len $userRoles)}}
+            {{$roleID:=0}}
+            {{giveRoleID $userID $noDebateRole}}
+        
+            {{range $idx:=seq 0 $numRoles}}
+                {{- $roleID = (toInt64 (index $userRoles $idx)) -}}
+                {{- if (in $rolesToTake $roleID) -}}
+                    {{- takeRoleID $userID $roleID -}}
+                {{- end -}}
+            {{end}}
+
+            Adjusted {{$placeholder1}}'s roles. They no longer have access to debate and serious topic channels.
+        {{end}}
+    {{end}}
+{{end}}

@@ -1,0 +1,205 @@
+{{/* ^\^(handshake|stronghandshake) */}}
+
+{{$cooldownExempt := (cslice
+	1028490891901554798
+	1028549391306469376               
+)}}
+{{$checkCooldown:=true}}
+{{$runIt:=true}}
+{{range $cooldownExempt }}
+    {{if hasRoleID .}}
+        {{$checkCooldown = false}}
+    {{end}}
+{{end}}
+ 
+{{if $checkCooldown}}
+    {{$global := 0}}
+    {{$name := (joinStr "-" "cooldown" .CCID)}}
+    {{$length := 20}}
+    {{$announce := 1}}
+    {{if eq $global 0}}{{$global = .User.ID}}{{else}}{{$global = (toInt64 0)}}{{end}}
+    {{if (dbGet $global $name)}}
+        {{if eq $announce 1}}
+           {{$msgID:=""}} {{$link:=""}} :warning: Command number {{.CCID}} is still on cooldown for: {{humanizeDurationSeconds ((dbGet $global $name).ExpiresAt.Sub currentTime)}}. 
+	   {{deleteResponse 20}}
+	   {{$msgID:=sendMessageRetID nil $link}}
+	   {{deleteMessage nil $msgID 20}}
+	{{end}}
+	{{$runIt = false}}
+    {{else}}{{dbSetExpire $global $name "cooldown" $length}}
+    {{end}}
+{{end}}
+{{if $runIt}}
+{{$numargs:=(len .CmdArgs)}}
+{{ $out:="" }}
+{{$recipient:=""}}
+{{ $action:=""}}
+{{$recipientCount:="single"}}
+{{$placeholder:=""}}
+{{$targetCounter:=0}}
+{{$userID:=.User.ID}}
+{{deleteResponse 15}}
+{{if lt $numargs 1}}
+	Syntax: ```^handshake/stronghandshake [@users] (max 7 people)```
+{{else}}
+	{{ range $x,$element := .CmdArgs}} 
+		{{if and (reFind "everyone" $element ) (lt $targetCounter 7)}}
+			{{$placeholder = "everyone else in the server"}}
+			{{$targetCounter = add $targetCounter 1}}
+		{{else}}
+			{{$temp1:=(getMember $element)}}
+			{{if and $temp1 (lt $targetCounter 7)}}
+				{{$targetCounter = add $targetCounter 1}}
+				{{if $temp1.Nick}}{{$placeholder = $temp1.Nick}}{{else}}{{$placeholder = $temp1.User.Username}}{{end}}
+				{{if eq $temp1.User.ID $userID}} {{$placeholder = "themselves"}} {{end}}
+			{{else}}{{$placeholder = ""}}{{/*$placeholder = (joinStr " " "a" noun)*/}}
+			{{end}}
+		{{end}}
+		{{if $placeholder}}{{$recipient = joinStr ", " $recipient $placeholder}}{{end}}
+	{{end}}
+	{{if gt $targetCounter 0}}
+	{{$group1:="  "}}	
+	{{$group2:=""}}
+	{{if gt $targetCounter 1}}
+		{{$recipientCount = "many"}}
+		{{$group1 = " throws "}}		
+		{{$group2 = "group "}}
+	{{end}}	
+	{{if (reFind "stronghandshake" (index .Args 0)) }}	
+		{{$action = joinStr "" $action $group1 "an extremely strong " $group2 "handshake to"}}
+	{{else}}
+		{{$action = joinStr "" $action $group1 "shakes " $group2 }}
+	{{end}}
+{{$iconDB:=sdict
+	"single" (cslice
+		"https://i.imgur.com/KRlBtQP.gif"
+		"https://i.imgur.com/1og4ytY.gif"
+		"https://i.imgur.com/EWAfNtM.gif"
+		"https://i.imgur.com/x5x9v2Y.gif"
+		"https://media.giphy.com/media/ZdlN56usaKaQg/giphy.gif"
+		"https://media.giphy.com/media/oX8pSaFrQw3sJ0K5bk/giphy.gif"
+		"https://media.giphy.com/media/3o7TKJNFVZ4xCMriFy/giphy.gif"
+		"https://media.giphy.com/media/xWcTtMwGlD8Bi/giphy.gif"
+		"https://media.giphy.com/media/l0MYxpBgBn0ISC7YI/giphy.gif"
+		"https://media.giphy.com/media/d1E2VyhFsxawRbeo/giphy.gif"
+		"https://media.giphy.com/media/dxOAJ4dPF0keAcUqiq/giphy.gif"
+		"https://media.giphy.com/media/W1TWg0qX5ZHhqwZJ8s/giphy.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712593160130570/my-girl-seal-friendship.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712594535854080/secret-handshake-trouble.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712596054200340/handshake-agree.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712596419112970/shake-hands-tom-and-jerry.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712600516952095/hand-shake-phone.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712600764403722/football-football-dance.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712603410993152/tom-and-jerry-jerry-the-mouse.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712614152626196/trump-macron-macron-trump.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712615746461706/handshake-arthur-read.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712642023751700/secret-handshake-handshake.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712676148621312/gang-handshake.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712730720706600/truce-friends.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714218461302845/image.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714219946102805/handshake2.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714222374600754/grip-strength-in-handshake-warning-major-disease.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714224396238878/The-Health-Secret-Your-Doctor-Can-Tell-from-Your-Handshake.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714225084108810/1561580754-BlogHandshake.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714226673766420/skynews-handshake-business_4801338.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714225486766131/129811623-56a2b0d23df78cf77278d8e1.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714229202939954/1385381.0.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714227751698452/iStock_000074965307_Large.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714231660785704/Handshake.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714261054468116/5746667.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714265181667398/handshake-on-blue.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714288703336449/business-handshake.jpg"
+		) 
+	"many" (cslice 
+		"https://us.123rf.com/450wm/rawpixel/rawpixel1602/rawpixel160201028/51601970-group-of-human-hands-holding-together-concept.jpg?ver=6"
+		"shorturl.at/bvPV9"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712611094970368/deal-handshake.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712636621520926/quando-rondo-handshake.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909712736408178688/blue-swallow-handshake.gif"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714854418468904/Group-handshake.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714856515629072/grouphandshake.jpg"
+		"https://cdn.discordapp.com/attachments/766807418356367401/909714853508304916/agreement_black_business_collaboration_cooperation_deal_diversity_friends-1563077.jpgd.jpg"
+		)
+}}
+{{$sayDB:=(cslice 
+	"and says \"you matter to me\"" 
+	"and says \"everything will be alright\"" 
+	"and says \"I'm here for you !\"" 
+	"and gives freshly-baked homemade cookies"
+	"and shares their favourite verse with them" 
+	"and gives them a snack"
+	"and gives them something" 	 	
+	"and gives them a poke" 	
+	"and tickles them" 	
+	"and winks at them" 	
+	"and smiles at them" 	
+	"and says \"When was the last time we shook hands?\"" 
+	"and says \"You're so nice!\"" 
+	"and says \"You're an awesome friend!\"" 
+	"and says \"What do you like to do on the weekend?\"" 
+	"and says \"you made my day a little more wholesome\""
+	"and says \"you mean the world to me, my friend\""
+	"and says \"Therefore comfort each other and edify one another, just as you also are doing. - 1 Thessalonians 5:11\""
+	"and says \"How are you friend?\""
+	"and says \"I hope you had a good week!\""
+	"and says \"Have a lovely day or night!\""
+	"and says \"Always a good time for a handshake!\""
+	"and says \"Handshake time!\""
+	"and says \"You guys are so wholesome!\""
+	"and says \"Let's hangout sometime maybe!\""
+	"and says \"you're wonderful!\"" 
+	"and says \"Jesus loves you!\"" 
+	"and says \"Thanks for existing!\"" 
+	"and says \"You're a ray of sunshine\"" 
+	"and says \"nothing\"" 
+	"and gives them a present" 
+	"and gives them a bible"
+	"and gives them chocolate" 
+	"and gives them ice cream"
+	"and pats them on the back" 
+	"and sings them a song" 
+	"and tells them about their day" 
+	"and dances with them"
+	"and jumps on a trampoline" 
+	"and gives a motivational speech" 
+	"and pinches their cheeks" 
+	", gives a strong handshake and twirls around like the sound of music" 
+	"and hosts a TED talk"
+	"and yawns" 
+	"and says i'm glad I met you"
+	"and says nothing else because sometimes in life we just need a handshake"
+	"and says I wish I could give you a real handshake.."
+	"and squeezes their hand so much it hurts"
+	"and seals a deal"
+	"and says the deal has been set!"
+	"you smell like tacos"
+	"and says why are Christians bad at math? because they can't sin" 
+	"and says I brushed my teeth today"
+	"and says ||rickroll||"
+	"and says welcome to the Guccio Giovanbattista Giacinto Dario Maria Gucci family"
+	"and says I left my other hand in the car"
+	)
+}}
+{{$var := randInt (len $sayDB)}}
+{{$say:=(index $sayDB $var)}}
+{{$hands := "'s hands"}}
+{{$iconSlice:=$iconDB.Get $recipientCount}}
+{{$var = randInt (len $iconSlice)}}
+{{$icon:=(index $iconSlice $var)}}
+{{$placeholder = .Member.Nick}}
+{{if not $placeholder}}{{$placeholder = .User.Username}}{{end}}
+{{$out = joinStr " " $placeholder $action $recipient $hands $say}}
+{{$title:="An epic handshake is happening !"}}
+{{if (reFind "stronghandshake" (index .Args 0)) }} {{$title = "STRONG HANDSHAKE TIME   <:Handshake:909355599177875456>"}}{{end}} 	
+ 
+{{ sendMessage nil (cembed
+		"description" $out
+		"thumbnail" (sdict "url" $icon)
+		"color" 8864206
+		"title" ($title)
+	) }}
+{{else}}
+	Syntax: ```^handshake/stronghandshake [@users] (max 7 people)```
+{{end}}
+{{end}}
+{{end}}

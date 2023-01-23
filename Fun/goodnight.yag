@@ -1,0 +1,162 @@
+{{/* ^\^(goodnight|gn) */}}
+
+{{/*set roles to be exempted from cooldown*/}}
+{{$cooldownExempt := (cslice
+        1028490891901554798
+	1028549391306469376
+)}}
+{{$checkCooldown:=true}}
+{{$runIt:=true}}
+{{range $cooldownExempt }}
+    {{if hasRoleID .}}
+        {{$checkCooldown = false}}
+    {{end}}
+{{end}}
+ 
+{{if $checkCooldown}}
+    {{/* Set to 0 for a per user cooldown, set to 1 to make the cooldown global. */}}
+    {{$global := 0}}
+    {{/* No need to edit: Auto-Naming of the database entry*/}}
+    {{$name := (joinStr "-" "cooldown" .CCID)}}
+    {{/* Length of the cooldown in seconds. */}}
+    {{$length := 30}}
+    {{/* Whether or not to announce when the command is on cooldown 1 for yes 0 for no */}}
+    {{$announce := 1}}
+    {{if eq $global 0}}{{$global = .User.ID}}{{else}}{{$global = (toInt64 0)}}{{end}}
+    {{if (dbGet $global $name)}}
+        {{if eq $announce 1}}
+              {{$msgID:=""}} {{$link:=""}} :warning: Command number {{.CCID}} is still on cooldown for: {{humanizeDurationSeconds ((dbGet $global $name).ExpiresAt.Sub currentTime)}}. 
+	      {{deleteResponse 5}}
+	      {{$msgID:=sendMessageRetID nil $link}}
+	      {{deleteMessage nil $msgID 20}}
+	{{end}}
+	{{$runIt = false}}
+    {{else}}{{dbSetExpire $global $name "cooldown" $length}}
+    {{end}}
+{{end}}
+ 
+{{if $runIt}}
+{{$numargs:=(len .CmdArgs)}}
+{{ $out:="" }}
+{{$recipient:=""}}
+{{ $action:=""}}
+{{$recipientCount:=""}}
+{{$placeholder:=""}}
+{{$targetCounter:=0}}
+{{if eq $numargs 1}}
+	{{if eq (index .CmdArgs 0) "@everyone"}}{{$placeholder = "everyone in the server"}}
+	{{else}}
+		{{$temp1:=(getMember (index .CmdArgs 0))}}
+		{{if $temp1}}
+			{{if $temp1.Nick}}{{$placeholder = $temp1.Nick}}{{else}}{{$placeholder = $temp1.User.Username}}{{end}}
+		{{else}}{{$placeholder = "...."}}
+		{{end}}
+	{{end}}
+	{{$recipient = joinStr "" $recipient $placeholder}}
+	{{$action = joinStr "" $action "Says Goodnight to " $recipient }}
+	{{$recipientCount = "single"}}
+{{else}}
+	{{ range $x,$element := .CmdArgs}} 
+		{{if and (eq $element "@everyone") (lt $targetCounter 7)}}
+			{{$placeholder = "everyone else in the server"}}
+			{{$targetCounter = add $targetCounter 1}}
+		{{else}}
+			{{$temp1:=(getMember $element)}}
+			{{if and $temp1 (lt $targetCounter 7)}}
+				{{$targetCounter = add $targetCounter 1}}
+				{{if $temp1.Nick}}{{$placeholder = $temp1.Nick}}{{else}}{{$placeholder = $temp1.User.Username}}{{end}}
+			{{else}}{{$placeholder = ""}}{{/*$placeholder = (joinStr " " "a" noun)*/}}
+			{{end}}
+		{{end}}
+		{{if $placeholder}}{{$recipient = joinStr ", " $recipient $placeholder}}{{end}}
+	{{end}}
+	{{$action = joinStr "" $action "Says Goodnight to everyone"}}
+	{{$recipientCount = "many"}}
+{{end}}
+{{if (gt $numargs 0)}}
+{{$iconDB:=sdict
+	"single" (cslice
+		"https://media.giphy.com/media/l1J9REbVPRgCVSJb2/giphy.gif"
+		"https://media.giphy.com/media/3o6ozrsVQF6Fv1ljNe/giphy.gif"
+		"https://media.giphy.com/media/Sc58cfnpEPsHlClCQs/giphy.gif"
+		"https://media.giphy.com/media/3o6fJ5LANL0x31R1Ic/giphy.gif"
+		"https://media.giphy.com/media/3PzjWJ49MfcrL6hWH5/giphy.gif"
+		"https://media.giphy.com/media/3oFzlVd5hA0lhYp3ws/giphy.gif"
+		"https://media.giphy.com/media/3oriNS5VULj8Ndn0TS/giphy.gif"
+		
+		) 
+	"many" (cslice 
+		"https://media.giphy.com/media/l1J9REbVPRgCVSJb2/giphy.gif"
+		)
+}}
+{{$sayDB:=(cslice 
+	"and says \"you matter to me\"" 
+	"and says \"everything will be alright\"" 
+	"and says \"I'm here for you !\"" 
+	"and gives freshly-baked homemade cookies"
+	"and shares their favourite verse with them" 
+	"and gives them a snack"
+	"and gives them a Roblox gift card"
+	"and gives them something" 	 	
+	"and gives them a poke" 	
+	"and tickles them" 	
+	"and winks at them" 	
+	"and smiles at them" 	
+	"and says \"I hope this isn't weird aha\"" 
+	"and says \"When was the last time we shook hands?\"" 
+	"and says \"I'll risk cooties for you\"" 
+	"and says \"You're so nice!\"" 
+	"and says \"You're an awesome friend!\"" 
+	"and says \"What do you like to do on the weekend?\"" 
+	"and says \"you made my day a little more wholesome\""
+	"and says \"you mean the world to me, my friend\""
+	"and says \"Therefore comfort each other and edify one another, just as you also are doing. - 1 Thessalonians 5:11\""
+	"and says \"How are you friend?\""
+	"and says \"I hope you had a good week!\""
+	"and says \"Have a lovely day or night!\""
+	"and says \"Always a good time for a handshake!\""
+	"and says \"Handshake time!\""
+	"and says \"You guys are so wholesome!\""
+	"and says \"Let's hangout sometime maybe!\""
+	"and says \"you're wonderful!\"" 
+	"and says \"Jesus loves you!\"" 
+	"and says \"Thanks for existing!\"" 
+	"and says \"You're a ray of sunshine\"" 
+	"and says \"nothing\"" 
+	"and gives them a present" 
+	"and gives them a bible"
+	"and shakes their hand"
+	"and gives them a high five" 	
+	"and gives them flowers" 
+	"and gives them chocolate" 
+	"and gives them ice cream"
+	"and gives them a holy kiss" 
+	"and pats them on the back" 
+	"and sings them a song" 
+	"and tells them about their day" 
+	"and dances with them"
+	"and jumps on a trampoline" 
+	"and gives a motivational speech" 
+	"and pinches their cheeks" 
+	"and hosts a TED talk"
+	"and yawns" 
+	)
+}}
+{{$var := randInt (len $sayDB)}}
+{{$say:=(index $sayDB $var)}}
+{{$iconSlice:=$iconDB.Get $recipientCount}}
+{{$var = randInt (len $iconSlice)}}
+{{$icon:=(index $iconSlice $var)}}
+{{$placeholder = (getMember .User.ID).Nick}}
+{{if not $placeholder}}{{$placeholder = .User.Username}}{{end}}
+{{$out = joinStr " " $placeholder $action $say}}
+{{ sendMessage nil (cembed
+		"description" $out
+		"thumbnail" (sdict "url" $icon)
+		"color" 8864206
+		"title" ("Someone is going to sleep !")
+	) }}
+{{else}}
+	Syntax: ```^goodnight [@users] (max 7 people)```
+{{end}}
+{{end}}

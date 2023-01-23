@@ -1,0 +1,5 @@
+{{/* \A */}}
+
+{{if eq .Channel.ID 1029239415916216351}}
+	{{deleteTrigger 5}}
+{{end}}

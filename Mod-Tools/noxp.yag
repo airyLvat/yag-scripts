@@ -1,0 +1,49 @@
+{{/* command: noxp */}}
+
+{{$allowedRole := 1029105006508519556}}
+{{$allowedRole2 := 1028490891901554798}}
+{{$rolesToTake := (cslice 
+					1029771284453785630
+					1028728111988232292
+                    1029771065024581712
+                    1029770539486679050
+                    1029770192957472778
+                    1028727909021655091
+                    684274430343512124
+                )}}
+{{$noXPRole := 1054621813335916544}}
+
+{{/* -----------CODE--------------- */}}
+{{$args := parseArgs 1 "Syntax is `^noxp [@user]`"
+    (carg "userid" "user to be removed from the XP system")}}
+{{if or (hasRoleID $allowedRole) (hasRoleID $allowedRole2)}} {{/* Mod commands */}}
+    {{$userID:=($args.Get 0)}}
+	{{$auditCh := 1029137217643356200}}
+	{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ")")}}
+    {{if and (not (targetHasRoleID $userID $allowedRole)) (not (targetHasRoleID $userID $allowedRole2))}} {{/* Won't run if target is a mod */}}
+        {{$placeholder1:=(getMember $userID).Nick}}
+        {{if not $placeholder1}}
+            {{$placeholder1 = (userArg $userID).Username}}
+        {{end}}
+
+        {{if (targetHasRoleID $userID $noXPRole)}}
+            {{takeRoleID $userID $noXPRole}}
+            {{$placeholder1}} is now back in the XP system.
+        {{else}}
+            {{$userRoles:=(getMember $userID).Roles}}
+            {{$numRoles:=(len $userRoles)}}
+            {{$roleID:=0}}
+
+            {{giveRoleID $userID $noXPRole}}
+
+            {{range $idx:=seq 0 $numRoles}}
+                {{- $roleID = (toInt64 (index $userRoles $idx)) -}}
+                {{- if (in $rolesToTake $roleID) -}}
+                    {{- takeRoleID $userID $roleID -}}
+                {{- end -}}
+            {{end}}
+
+            Removed {{$placeholder1}} from the XP system.
+        {{end}}
+    {{end}}
+{{end}}

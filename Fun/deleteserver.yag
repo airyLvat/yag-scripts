@@ -1,0 +1,104 @@
+{{/* command: deleteserver */}}
+
+{{/*set roles to be exempted from cooldown*/}}
+{{$cooldownExempt := (cslice
+        1028490891901554798
+	1028549391306469376
+)}}
+{{$checkCooldown:=true}}
+{{$runIt:=true}}
+{{range $cooldownExempt }}
+    {{if hasRoleID .}}
+        {{$checkCooldown = false}}
+    {{end}}
+{{end}}
+ 
+{{if $checkCooldown}}
+    {{/* Set to 0 for a per user cooldown, set to 1 to make the cooldown global. */}}
+    {{$global := 0}}
+    {{/* No need to edit: Auto-Naming of the database entry*/}}
+    {{$name := (joinStr "-" "cooldown" .CCID)}}
+    {{/* Length of the cooldown in seconds. */}}
+    {{$length := 30}}
+    {{/* Whether or not to announce when the command is on cooldown 1 for yes 0 for no */}}
+    {{$announce := 1}}
+    {{if eq $global 0}}{{$global = .User.ID}}{{else}}{{$global = (toInt64 0)}}{{end}}
+    {{if (dbGet $global $name)}}
+        {{if eq $announce 1}}
+                   {{$msgID:=""}} {{$link:=""}} :warning: Command number {{.CCID}} is still on cooldown for: {{humanizeDurationSeconds ((dbGet $global $name).ExpiresAt.Sub currentTime)}}. 
+		   {{deleteResponse 5}}
+		   {{$msgID:=sendMessageRetID nil $link}}
+	           {{deleteMessage nil $msgID 20}}
+    {{end}}
+    {{$runIt = false}}
+    {{else}}{{dbSetExpire $global $name "cooldown" $length}}
+    {{end}}
+{{end}}
+ 
+{{if $runIt}}
+{{deleteResponse 30}}
+{{$idx1 := randInt 1 15}}
+{{$serverName:= .Guild.Name}}
+{{$userMention:= (userArg .User.ID).Mention}}
+{{if eq $idx1 1}}
+We apologize but it seems {{$serverName}} can never be deleted.
+<a:YouTriedAnim:671874674115870750>
+{{else if eq $idx1 2}}
+Are you sure you want to delete the {{$serverName}} server? [Y/N] <a:AttentionAnim:697052177776246806>
+{{else if eq $idx1 3}}
+Thank you for your request. The {{$serverName}} server will be deleted in 7 - 999 business days.
+{{else if eq $idx1 4}}
+Reporting {{$userMention}} to {{$serverName}} admins for trying to delete the server.
+{{else if eq $idx1 5}}
+>>mute {{$userMention}} 777d for attempting to delete the {{$serverName}} server.
+{{else if eq $idx1 6}}
+>>ban {{$userMention}} for attempting to delete the {{$serverName}} server.
+<a:BannedAnim:702444144840278056> 
+{{else if eq $idx1 7}}
+>>kick {{$userMention}} for attempting to delete the {{$serverName}} server.
+:mechanical_leg:
+{{else if eq $idx1 8}}
+{{$text:="\nServer delete sequence initiated "}}
+{{$mID := sendMessageRetID nil $text}}
+{{ range $x := seq 0 6 }}
+{{sleep 1}}
+{{$text = (joinStr "" $text "..")}}
+{{editMessage nil $mID $text}}
+{{end}}
+{{$text = (joinStr "\n" $text "**System error !** Restoring server data ")}}
+{{editMessage nil $mID $text}}
+{{ range $x := seq 0 3 }}
+{{sleep 1}}
+{{$text = (joinStr "" $text "..")}}
+{{editMessage nil $mID $text}}
+{{end}}
+{{$text = (joinStr "\n" $text "SERVER IS RESTORED.")}}
+{{editMessage nil $mID $text}}
+{{else if eq $idx1 9}}
+{{ sendMessage nil (cembed
+		"description" "Who dares to delete the server? Behold the King's wrath descend upon thee !" 
+		"thumbnail" (sdict "url" "https://cdn.discordapp.com/emojis/690444984217894912.png?v=1")
+		"color" 15357012
+		"title" "You hear a loud voice coming from the castle..."
+	) }}
+{{else if eq $idx1 10}}
+{{ sendMessage nil (cembed
+		"description" "We are sorry but we are not deleting this server. Thank you." 
+		"thumbnail" (sdict "url" "http://clipart-library.com/images/ki8nKxaeT.png")
+		"color" 11534336
+		"title" "You hear the Queen's voice coming from the castle..."
+	) }}
+{{else if eq $idx1 11}}
+Thou shalt not deleteth the {{$serverName}} server !
+{{else if eq $idx1 12}}
+{{$userMention}} hears a whirring sound of a mechanical hard drive, and a notification box about {{$serverName}} deletion. They wait in anticipation, and after some time, finally... FINALLY...
+
+Nothing happens...
+{{else if eq $idx1 13}}
+As {{$userMention}} typed **^deleteserver** and hit the Enter button, they heard the deep maniac laughter of the Satan himself... which eventually turned to a sobbing sound because {{$serverName}} can never be deleted.
+{{else if eq $idx1 14}}
+As {{$userMention}} typed **deleteserver** into command prompt and hit the Enter button, Windows 10 froze for a few seconds and then the dreaded blue screen of death appeared. Error: {{$serverName}} can never be deleted.
+{{else}}
+You do not have the required privileges to delete the server. Run the `^modrole` command first to become a Moderator before deleting the server. Thank you.
+{{end}}    
+{{end}}

@@ -1,0 +1,8 @@
+{{/* command: debate */}}
+
+{{$args := parseArgs 1 "Syntax is `^debate [@user]`"
+    (carg "userid" "user to be directed to debate")}}
+{{$userID:=($args.Get 0)}}
+
+{{deleteTrigger 0}}
+{{sendMessage nil (joinStr "" (getMember $userID).User.Mention " please take this conversation to <#1028554642579267634> or <#1028555028350373909>. If you can't see those channels, go to <#1028788496367882280> to get access. You may be moved there if you don't move on your own. Thanks!")}}

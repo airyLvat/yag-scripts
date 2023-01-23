@@ -1,0 +1,7 @@
+{{/* reactionadded */}}
+
+{{if and (or (eq .Reaction.Emoji.Name "🇵") (eq .Reaction.Emoji.Name "🇬")) (not .User.Bot)}}
+    {{if hasRoleID "1028766306549375048"}}
+        {{takeRoleID .User.ID "1028766306549375048"}} 
+    {{else}}{{end}} 
+{{else}}{{end}}

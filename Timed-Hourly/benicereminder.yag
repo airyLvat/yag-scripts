@@ -1,0 +1,9 @@
+{{/* every 4 hours */}}
+
+{{$message := cembed "title" "Rules Reminder" "description" "Friendly reminder, we encourage debates in good faith. Please do not insult one another. Staff members may intervene at their discretion. Thank you." "color" 0x2b6294}}
+
+{{$channels := cslice 1028554642579267634 1028555028350373909 1028764052123553925 1028764122097143838}}
+
+{{range $channels}}
+	{{sendMessage . $message}}
+{{end}}

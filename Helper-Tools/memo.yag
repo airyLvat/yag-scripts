@@ -1,0 +1,161 @@
+{{/* command: memo */}}
+
+{{/*
+	This command is is a user note system that attaches to the recipient user. Usage: ^memo [@user or userID] to query the user's notes;  ^memo [@user or userID] [notes enclosed by double quotes] to add a new note to the user; ^memo [@user or userID] [memo number] [notes enclosed by double quotes] to overwrite an existing note.
+ 
+	Recommended trigger: Command trigger with trigger `memo`.
+ 
+	note structure:
+	//0|ChID|MsgID|for the log
+	1|Action|ModName|DateTime|Note
+	2|Action|ModName|DateTime|Note
+*/}}
+{{/* -----------CONFIGS----------- */}}
+{{$dbID:=2110}} {{/* database ID to store the memos */}}
+{{$memoRecord:="memo-"}}
+{{$logChannelID:=1029137217643356200}} {{/* ID of the logging channel */}}
+{{$modChats:=1028766941277585518}}
+{{$modUtility:=1028556757066317834}}
+{{$adminUtility:=1028770306388676658}}
+{{/* -----------CODE--------------- */}}
+	{{$verb:=""}}
+	{{$modName:=.User.Username}}
+	{{$msgID:=0}}	
+	{{$numArgs:=(len .CmdArgs)}}
+	{{$lastRecord:=0}}
+	{{$title:=""}}
+	{{$body:=""}}
+	{{$hit:=false}}
+	{{$userID:=0}}
+	{{$memoSplit:=""}}
+{{if or (eq .Channel.ParentID $modChats) (eq .Channel.ParentID $modUtility) (eq .Channel.ParentID $adminUtility)}}
+	{{if eq $numArgs 0}}
+	Usage: 
+	```
+	^memo [@user or userID] to query the user's note
+	^memo [@user or userID] [note here] to add a new note to the user
+	^memo [@user or userID] [memo number] [note here] to overwrite an existing note.
+	^memo [@user or userID] [memo number] [del] to delete an existing note.```	
+	{{else}}
+		{{$targetUser:=userArg (index .CmdArgs 0)}}
+		{{$userID = $targetUser.ID}}
+		{{$targetName:=""}}
+		{{$ghostUser:=0}}
+		{{if $userID}}
+			{{$targetName = (getMember $userID).Nick}}
+			{{if not $targetName}}{{$targetName = $targetUser.Username}}{{end}}
+		{{else}}
+			{{sendMessage nil "Target user is not a server member"}}{{$ghostUser = toInt64 (index .CmdArgs 0)}}
+		{{end}}
+	{{/*--------------------View memo----------------------*/}}
+		{{if eq $numArgs 1}}
+			
+			{{$query1:=dbGet $dbID (joinStr "" $memoRecord (or $userID $ghostUser))}}
+			{{if $query1}}
+				{{if $userID}}
+					{{$title = (joinStr " " "Memos for" $targetName)}}
+				{{else}}
+					{{$title = (joinStr " " "Memos for" $ghostUser)}}
+				{{end}}
+				{{$rune:=toRune $query1.Value}}
+				{{$iteration:=toInt (roundCeil (fdiv (len $rune) 1900)) }}
+				{{if eq $iteration 1}} {{/*saves time*/}}
+					{{ sendMessage nil (cembed
+						"title" $title
+						"color" 14423100
+						"description" (or $query1.Value "*No content*")
+					) }}				
+				{{else}}
+					{{$memoMsg:=""}}
+				{{range $count := seq 0 $iteration}}
+					{{$start:=mult 1900 $count}}
+					{{$end:=mult 1900 (add $count 1)}}
+					{{if eq $count (sub $iteration 1) }} {{$memoMsg = (slice $query1.Value $start)}} {{else}} {{$memoMsg = (slice $query1.Value $start $end)}} {{end}}
+					{{ sendMessage nil (cembed
+						"title" (joinStr "" $title " : " (add $count 1) "/" $iteration) 
+						"color" 14423100
+						"description" $memoMsg
+					) }}
+				{{end}}	
+				{{end}}
+			{{else}}
+				{{sendMessage nil "The user does not have any memos yet."}}
+			{{end}}
+	{{/*--------------------Modif/Del memo----------------------*/}}
+		{{else if and $userID (gt $numArgs 1)}}
+			{{if (reFind "^[0-9]+\\b" (index .CmdArgs 1))}}{{/*modif/del*/}}
+				{{$query1:=dbGet $dbID (joinStr "" $memoRecord $userID)}}
+				{{if $query1}} 
+					{{$memoSplit = (split $query1.Value "\n")}}
+					{{$lastRecord = (len $memoSplit)}} 
+				{{end}}
+				{{$modifRecordNum:= toInt (index .CmdArgs 1)}}
+				{{if and ($query1) (le $modifRecordNum $lastRecord)}}					
+					{{$exRecord:=(index $memoSplit (sub $modifRecordNum 1))}}
+					{{$exModID := (index (split $exRecord "|") 1)}}
+
+					{{if or (eq (toInt64 $exModID) .User.ID) (reFind "([a-zA-Z])" $exModID)}}
+						{{$hit = true}}{{$verb = "modified"}}
+						{{$splitRecord:=(split $query1.Value $exRecord)}}
+						{{if eq (lower (index .CmdArgs 2)) "del"}}
+							{{$verb = "deleted"}}
+						{{else}}
+							{{$verb = "modified"}}
+						{{end}}
+							{{$theMemo:=""}}{{range $i, $j:=.CmdArgs}}{{if gt $i 1}}{{$theMemo = joinStr " " $theMemo $j}}{{end}}{{end}}
+							{{$newRecord := (joinStr "" $modifRecordNum "|" "EditMemo" "|" $modName "|" currentTime.Month "/" currentTime.Day "/" currentTime.Year "-" (currentTime.Format "15:04") "|deleted memo \n")}}
+						{{$body = (joinStr "" (index $splitRecord 0) $newRecord (index $splitRecord 1))}}
+						{{$body = reReplace "[\n]+" $body "\n"}}
+						{{$title = (printf "Memo modified for %s by %s" $targetName $modName)}}
+					{{end}}
+				{{end}}			
+	{{/*--------------------Add new memo----------------------*/}}
+			{{else}}{{/*new memo*/}}
+				{{$hit = true}}{{$verb = "added"}}
+				{{$query1:=dbGet $dbID (joinStr "" $memoRecord $userID)}}
+				{{if $query1}} 
+					{{$memoSplit = (split $query1.Value "\n")}}
+					{{$lastRecord = (len $memoSplit)}} 
+				{{end}}
+				{{$theMemo:=""}}{{range $i, $j:=.CmdArgs}}{{if gt $i 0}}{{$theMemo = joinStr " " $theMemo $j}}{{end}}{{end}}			
+				{{$newRecord:=(joinStr "" (add $lastRecord 1) "|" "AddMemo" "|" $modName "|" currentTime.Month "/" currentTime.Day "/" currentTime.Year "-" (currentTime.Format "15:04") "|" $theMemo)}}
+				{{if $query1}}
+					{{/*$msgID = index (split (index $memoSplit 0) "|") 2*/}}
+					{{$body = (joinStr "" $query1.Value "\n" $newRecord)}}
+				{{else}}
+					{{$body = $newRecord}}
+				{{end}}
+				{{$title = (printf "Memo added for %s by %s" $targetName $modName)}}		
+			{{end}}
+		{{end}}
+	{{/*--------------------Log in memo channel----------------------*/}}
+		{{if $hit}}
+			{{dbSet $dbID (joinStr "" $memoRecord $userID) $body}}
+				{{$rune:=toRune $body}}
+				{{$iteration:=toInt (roundCeil (fdiv (len $rune) 1900)) }}
+				{{if eq $iteration 1}} {{/*saves time*/}}
+			{{ sendMessage $logChannelID (cembed
+				"title" $title
+				"color" 14423100
+				"description" $body
+			) }}
+				{{else}}
+					{{$memoMsg:=""}}
+				{{range $count := seq 0 $iteration}}
+					{{$start:=mult 1900 $count}}
+					{{$end:=mult 1900 (add $count 1)}}
+					{{if eq $count (sub $iteration 1) }} {{$memoMsg = (slice $body $start)}} {{else}} {{$memoMsg = (slice $body $start $end)}} {{end}}
+			{{ sendMessage $logChannelID (cembed
+				"title" (joinStr "" $title " : " (add $count 1) "/" $iteration) 
+				"color" 14423100
+				"description" $memoMsg
+			) }}
+				{{end}}	
+				{{end}}
+		Memo {{$verb}} for {{$targetName}}.
+		{{end}}
+	{{end}}
+{{else}}
+	Please use memo commands in one of the private staff channels.
+	{{deleteResponse 60}}
+{{end}}	

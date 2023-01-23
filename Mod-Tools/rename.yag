@@ -1,0 +1,5 @@
+{{/* command: rename */}}
+
+{{joinStr "" .User.Mention ", I believe you meant the following (you can copy and paste it): \n`%rename " (index .Args 1) "`"}}
+{{deleteTrigger 30}}
+{{deleteResponse 30}}

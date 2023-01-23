@@ -1,0 +1,69 @@
+{{/* command: undomove */}}
+
+{{$modID:=1028490891901554798}}
+{{$timer:=1}}
+{{$dbID:=21191}}
+{{$moveRoleID:=1032775032239300618}}
+{{$userID:=.User.ID}}
+ 
+{{if .ExecData.users}} 
+    {{$msg:=""}}
+    {{$placeholder:=.ExecData.users}}
+    {{range $x := seq 1 .ExecData.numUsers}}
+        {{$msg = (joinStr ", " $msg (userArg (index $placeholder $x)).Mention)}}
+    {{end}}
+    {{(joinStr "" $msg " You're now able to chat in all channels again.")}} 
+ 
+{{else if .ExecData.targetID}}
+    {{with .ExecData}}
+        {{ $cc := toInt .CCID }}
+        {{$destCh:=(toString .chID)}}
+        {{$placeholder1:=.targetID}}
+        {{$users:=(cslice "" $placeholder1)}}
+        {{$msg:=""}}
+        {{if (targetHasRoleID $placeholder1 $moveRoleID)}}
+            {{dbSetExpire $dbID $placeholder1 $destCh $timer}}
+            {{takeRoleID $placeholder1 $moveRoleID}}
+	    {{$response:=execAdmin (joinStr " " "removetimeout" $placeholder1)}}
+            {{(joinStr "" "<@" .targetID "> You can now chat in all channels again")}}
+            {{ execCC $cc nil 1 (sdict "numUsers" 2 "users" $users "ch" $destCh)}}
+        {{else}}
+            Target was not moved.
+        {{end}}
+    {{end}}
+ 
+{{else}}
+    {{ $cc := toInt .CCID }}
+    {{$args := parseArgs 1 "Syntax is `^undomove [@users (max 5 users in 1 command)]`"
+        (carg "string" "users to undomove")}}
+    {{$destCh:=.Channel.ID}}
+    {{$placeholder:=split ($args.Get 0) " "}}
+{{if lt (len $placeholder) 6}}
+{{$users:=(cslice "")}}
+{{$placeholder1:=0}}
+{{$msg:=""}}
+{{range $placeholder}}
+    {{$placeholder1 = (userArg .).ID}}
+    {{if $placeholder1}}
+        {{if (targetHasRoleID $placeholder1 $moveRoleID) }}
+            {{if (ne $userID $placeholder1)}}
+            {{$users = $users.Append $placeholder1}}
+            {{dbSetExpire $dbID $placeholder1 $destCh $timer}}
+            {{takeRoleID $placeholder1 $moveRoleID}}
+	    {{$response:=execAdmin (joinStr " " "removetimeout" $placeholder1)}}
+            {{else}}
+            You cannot undomove yourself.
+            {{end}}
+        {{else}}
+            Target was not moved.
+        {{end}}
+    {{end}}
+{{end}}
+{{$numUsers:=len $users}}
+{{if gt $numUsers 1}}
+    {{ execCC $cc nil 1 (sdict "numUsers" $numUsers "users" $users "ch" $destCh)}}
+{{end}}
+{{else}}
+Sorry but you cannot undo-move more than 5 users at once.
+{{end}}
+{{end}}

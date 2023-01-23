@@ -1,0 +1,37 @@
+{{/* .* */}}
+
+{{$ModsRoles := cslice 1029105006508519556}}
+
+{{$isMod := false}} {{range .Member.Roles}} {{if in $ModsRoles .}} {{$isMod = true}} {{end}} {{end}}
+{{$isCmd := false}} {{if (and (reFind `\A\^(un)?lock` (lower .Cmd)) ($isMod))}} {{$isCmd = true}} {{end}}
+{{if and (dbGet .Channel.ID "is_blocked") (not $isMod)}}
+	{{deleteTrigger 0}}
+	{{$hush := execAdmin "timeout" .User.ID "1m" "posting in a locked channel"}}
+{{end}}
+
+{{if $isCmd}}
+    {{$channel := .Channel.ID}}
+    {{if getChannelOrThread $channel}}
+        {{if not (reFind `^\^un` (lower .Cmd))}}
+            {{if dbGet $channel "is_blocked"}}
+                The channel <#{{$channel}}> is already locked. Attempting to post in this channel will cause you to be timed out.
+            {{else}}
+                {{dbSet $channel "is_blocked" true}}
+                {{sendMessage nil (cembed
+                        "description" (joinStr "" "The channel <#" $channel "> is now locked. Attempting to post in this channel will cause you to be timed out.")
+                        "color" 0xac413e
+                        "title" "Channel locked"	
+                )}}
+            {{end}}
+        {{else}}
+            {{if dbGet $channel "is_blocked"}}
+                The channel <#{{$channel}}> is no longer locked.
+                {{dbDel $channel "is_blocked"}}
+            {{else}}
+                The channel <#{{$channel}}> is not locked.
+            {{end}}
+        {{end}}
+    {{else}}
+        Somehow tried to lock an invalid channel.
+    {{end}}
+{{end}}

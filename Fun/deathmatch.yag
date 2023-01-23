@@ -1,0 +1,147 @@
+{{/* command: deathmatch */}}
+
+{{$runIt:=true}}
+ 
+{{if not .ExecData}} 
+ 
+    {{/* Set to 0 for a per user cooldown, set to 1 to make the cooldown global. */}}
+    {{$global := 1}}
+    {{/* No need to edit: Auto-Naming of the database entry*/}}
+    {{$name := "deathmatchtypecommands"}}
+    {{/* Length of the cooldown in seconds. */}}
+    {{$length := 45}}
+    {{/* Whether or not to announce when the command is on cooldown 1 for yes 0 for no */}}
+    {{$announce := 1}}
+    {{if eq $global 0}}{{$global = .User.ID}}{{else}}{{$global = (toInt64 0)}}{{end}}
+    {{if (dbGet $global $name)}}
+        {{if eq $announce 1}}
+{{deleteResponse 10}}
+            :warning: All deathmatch type commands including {{.CCID}} are still on cooldown for: {{humanizeDurationSeconds ((dbGet $global $name).ExpiresAt.Sub currentTime)}}.
+	{{end}}
+	{{$runIt = false}}
+    {{else}}{{dbSetExpire $global $name "cooldown" $length}}
+    {{end}}
+{{end}}
+
+{{if $runIt}}
+{{/*
+	This command is a replica of the deathmatch command from Yggdrasil. Usage: `-deathmatch [user1] [user2]`.
+
+	Recommended trigger: Command trigger with trigger `deathmatch`.
+*/}}
+
+{{/* CONFIGURATION VALUES START */}}
+{{/* Slice of random channel IDs in your server to decrease execCC lag */}}
+{{ $channels := cslice
+	1028538456831434793
+	1028538491677704244
+	1029137217643356200
+}}
+{{ $emojis := sdict
+	"UserA" "<:battleForward:681735565594460181>"
+	"UserB" "<:battleBackwards:681735538105253901>"
+}}
+{{ $yag := userArg 204255221017214977 }}
+{{/* CONFIGURATION VALUES END */}}
+
+{{ $args := parseArgs 0 "**Syntax:** ^deathmatch [user1] [user2]" (carg "userid" "user1") (carg "userid" "user2") }}
+{{ $userA := $yag }}
+{{ $userB := .User }}
+{{ $cc := toInt .CCID }}
+
+{{ if $args.IsSet 0 }} {{ $userA = userArg ($args.Get 0) }} {{ end }}
+{{ if $args.IsSet 1 }} {{ $userB = userArg ($args.Get 1) }} {{ end }}
+{{$placeholder1:=(getMember $userA.ID).Nick}}
+{{$placeholder2:=(getMember $userB.ID).Nick}}
+{{if not $placeholder1}}{{$placeholder1 = $userA.Username}}{{end}}
+{{if not $placeholder2}}{{$placeholder2 = $userB.Username}}{{end}}
+{{ $embed := sdict 
+	"title" "💢🏇 Jousting Match"
+	"description" "*Match starting in 3...*"
+	"color" 14232643
+	"footer" (sdict "text" "scripturealone")
+	"fields" (cslice
+		(sdict "name" $placeholder1 "value" "100/100 HP" "inline" true)
+		(sdict "name" $placeholder2 "value" "100/100 HP" "inline" true)
+	)
+}}
+
+{{ with .ExecData }}
+	{{ $embed := sdict .Embed }}
+	{{ $embed.Set "fields" (cslice.AppendSlice $embed.fields) }}
+
+	{{ $msgs := split $embed.description "\n" | cslice.AppendSlice }}
+	{{ if .IsFirst }} {{ $msgs = cslice }} {{ end }}
+
+	{{ $attacker := index . .Attacker | sdict }}
+	{{ $target := index . .Target | sdict }}
+	{{ $emoji := $emojis.Get .Target }}
+
+	{{ $rand := randInt 100 }}
+	{{ $dmg := 0 }}
+	{{ if lt $rand 5 }}
+		{{ $dmg = randInt 40 50 }}
+	{{ else if lt $rand 15 }}
+		{{ $dmg = randInt 30 40 }}
+	{{ else if lt $rand 45 }}
+		{{ $dmg = randInt 20 30 }}
+	{{ else }}
+		{{ $dmg = randInt 1 20 }}
+	{{ end }}
+
+	{{ $newHp := sub $target.HP $dmg }}
+	{{ if lt $newHp 0 }} {{ $newHp = 0 }} {{ end }}
+	{{ $target.Set "HP" $newHp }}
+	{{ $msgs = $msgs.Append (printf "%s **%s** attacked **%s**, dealing __%d__ damage!"
+		$emoji
+		$attacker.Name
+		$target.Name
+		$dmg
+	) }}
+	
+	{{$temp1:=.Target}}
+	{{$temp2:=.Attacker}}
+	{{ $data := sdict . }}
+	{{ $data.Set "IsFirst" false }}
+	{{ $data.Set "Target" $temp2 }}
+	{{ $data.Set "Attacker" $temp1 }}
+	{{/* $data.Set .Target $target */}}
+
+	{{ if not $target.HP }}
+		{{ $msgs = $msgs.Append (printf "🏆 **%s** has won!" $attacker.Name) }}
+	{{ end }}
+	{{ if gt (len $msgs) 3 }}
+		{{ $msgs = slice $msgs (sub (len $msgs) 3) (len $msgs) }}
+	{{ end }}
+	{{ $embed.Set "description" (joinStr "\n" $msgs.StringSlice) }}
+		
+	{{ $embed.fields.Set (index (sdict "UserA" 0 "UserB" 1) .Target) (sdict
+		"name" $target.Name
+		"value" (printf "%d/100 HP" $target.HP)
+		"inline" true
+	) }}
+	{{ $data.Set "Embed" $embed }}
+
+	{{ if $target.HP }}
+		{{ execCC $cc (index $channels (randInt (len $channels))) 2 $data }}
+	{{ end }}
+
+	{{ editMessage .ChannelID .MsgID (cembed $embed) }}
+
+{{ else }}
+	{{ $initial := sendMessageRetID nil (cembed $embed) }}
+	{{ sleep 3 }}
+	{{ execCC $cc (index $channels (randInt (len $channels))) 2 (sdict
+		"UserA" (sdict "Name" $placeholder1 "HP" 100)
+		"UserB" (sdict "Name" $placeholder2 "HP" 100)
+		"Embed" $embed
+		"Target" "UserA"
+		"Attacker" "UserB"
+		"MsgID" $initial
+		"IsFirst" true
+		"ChannelID" .Channel.ID
+	) }}
+{{ end }}
+
+
+{{end}}

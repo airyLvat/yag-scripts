@@ -1,0 +1,14 @@
+{{/*DEBUG*/}}
+{{$debugCh:=869108508216406026}}
+{{$debugEnabled:=false}}
+{{if $debugEnabled}}
+	{{sendMessage $debugCh "Member joined"}}
+{{end}}	
+
+{{/*Makes sure usernames are pingable*/}}
+{{$new := reReplace `[^#-z ]` .User.Username ``}}
+{{if $new}}
+{{editNickname $new}}
+{{else}}
+{{editNickname (joinStr " " "Unpingable Username" (randInt 100 999))}}
+{{end}}

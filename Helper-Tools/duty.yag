@@ -1,0 +1,45 @@
+{{/* command: duty */}}
+
+{{$knightRole := 1028490891901554798}}
+{{$squireRole := 1028549391306469376}}
+{{$offDutyKnightRole := 1039672711607226468}}
+{{$offDutySquireRole := 1039672611795374101}}
+{{$servantRole := 1029105006508519556}}
+
+{{$squireName1 := "🔰 |"}}
+{{$squireName2 := "| άρχων"}}
+{{$knightName1 := "♞ |"}}
+{{$knightName2 := "| מְשָׁרֵת"}}
+
+{{if not (hasRoleID $servantRole)}}
+    {{if or (hasRoleID $knightRole) (hasRoleID $squireRole) (hasRoleID $offDutyKnightRole) (hasRoleID $offDutySquireRole)}}
+        {{/*is allowed to use this command*/}}
+        {{if (hasRoleID $knightRole)}}
+            {{takeRoleID .User.ID $knightRole}}
+            {{giveRoleID .User.ID $offDutyKnightRole}}
+            {{editNickname ""}}
+            Take a break, {{.User.Mention}} 💚
+        {{else if (hasRoleID $squireRole)}}
+            {{takeRoleID .User.ID $squireRole}}
+            {{giveRoleID .User.ID $offDutySquireRole}}
+            {{editNickname ""}}
+            Take a break, {{.User.Mention}} 💚
+        {{else if (hasRoleID $offDutyKnightRole)}}
+            {{takeRoleID .User.ID $offDutyKnightRole}}
+            {{giveRoleID .User.ID $knightRole}}
+            {{editNickname (joinStr " " $knightName1 .User.Username $knightName2)}}
+            Ready for action, {{.User.Mention}} 💪
+        {{else if (hasRoleID $offDutySquireRole)}}
+            {{takeRoleID .User.ID $offDutySquireRole}}
+            {{giveRoleID .User.ID $squireRole}}
+            {{editNickname (joinStr " " $squireName1 .User.Username $squireName2)}}
+            Ready for action, {{.User.Mention}} 💪
+        {{else}}
+            Check the space-time continuum for holes.
+        {{end}}
+    {{else}}
+        Deleting {{.User.Mention}}'s account in in 3... 2... #error
+    {{end}}
+{{else}}
+    Servant's are always on duty, {{.User.Mention}}
+{{end}}

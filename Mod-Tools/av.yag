@@ -1,0 +1,55 @@
+{{/* ^\^\b(avatar|av|pfp|propic)\b */}}
+
+{{deleteResponse 30}}
+	{{$modRole:=456214748845965323}}
+	{{$msgID:=0}}
+	{{$ln := (len .Args)}}
+	{{$sizes := (cslice "16" "32" "64" "128" "256" "512" "1024" "2048" "4096")}}
+	{{$err1 := "Wrong image size input format! Possible values: 16, 32, 64, 128, 256, 512, 1024, 2048, 4096."}}
+	{{$err2 := "Unknown user :("}}
+	{{$color := 1478046}}
+	{{if gt $ln 1}}
+	  {{$1 := (index .Args 1)}}
+	  {{if ($user := userArg $1)}}
+		{{if gt $ln 2}}
+		  {{$2 := (index .Args 2)}}
+		  {{if in $sizes $2}}
+			{{$out := $user.AvatarURL (toString $2)}}
+			{{$emb := cembed "color" $color "image" (sdict "url" $out)}}
+			{{$msgID = sendMessageRetID nil $emb}}
+		  {{else}}
+			{{$err1}}
+		  {{end}}
+		{{else}}
+		  {{$out := $user.AvatarURL "512"}}
+		  {{$emb := cembed "color" $color "image" (sdict "url" $out)}}
+			{{$msgID = sendMessageRetID nil $emb}}
+		{{end}}
+	  {{else if gt $ln 2}}
+		{{$2 := (index .Args 2)}}
+		{{if ($user := userArg $2)}}
+		  {{if in $sizes $1}}
+			{{$out := $user.AvatarURL (toString $1)}}
+			{{$emb := cembed "color" $color "image" (sdict "url" $out)}}
+			{{$msgID = sendMessageRetID nil $emb}}
+		  {{else}}
+			{{$err1}}
+		  {{end}}
+		{{else}}
+		  {{$err2}}
+		{{end}}
+	  {{else if in $sizes $1}}
+		{{$out := .User.AvatarURL (toString $1)}}
+		{{$emb := cembed "color" $color "image" (sdict "url" $out)}}
+			{{$msgID = sendMessageRetID nil $emb}}
+	  {{else}}
+		{{$err1}}
+	  {{end}}
+	{{else}}
+	  {{$out := .User.AvatarURL "512"}}
+	  {{$emb := cembed "color" $color "image" (sdict "url" $out)}}
+	  {{$msgID = sendMessageRetID nil $emb}}
+	{{end}}
+	{{if eq .Channel.ID 705236813236797441}} {{/*main chat*/}}
+	{{deleteMessage nil $msgID 60}}
+	{{end}}

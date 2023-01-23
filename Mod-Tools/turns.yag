@@ -1,0 +1,69 @@
+{{/* command: turns */}}
+
+{{/*Turn-Based Debate*/}}
+{{/*CC to initiate, query or stop the debate. Use command "turns" as trigger. Mod-only CC. Format: ^turns start/query/remove/stop [users to join/add to the debate, up to 5 users in 1 command]*/}}
+ 
+{{$dbID:=179}}
+{{$debateRole:=1065730204401680484}}
+{{$debateChannel:=1065729758635249804}}
+{{/*------Code starts here-----*/}}
+ 
+{{$args := parseArgs 1 "Syntax is `^turns [start/remove/query/stop] [users to join/leave debate, up to 5 per command]`"   
+   	(carg "string" "start/query/remove/stop")
+	(carg "userid" "user 1 to join debates")
+	(carg "userid" "user 2 to join debates")
+	(carg "userid" "user 3 to join debates")
+	(carg "userid" "user 4 to join debates")
+	(carg "userid" "user 5 to join debates")
+	}}
+ 
+{{$arg:=lower ($args.Get 0)}}
+ 
+{{if eq $arg "start"}}
+	{{$newDebaters:=""}}
+	{{$newPeople:=""}}
+	{{ range $x := seq 1 5 }}
+		{{if $args.IsSet $x}} {{$newDebaters = (joinStr " " $newDebaters ($args.Get $x))}} {{$newPeople = (joinStr "" $newPeople "<@" ($args.Get $x) "> ")}} {{end}}
+	{{ end }}
+	{{$debaters := dbGet $dbID "debate"}}
+	{{if $debaters}}
+		{{$newDebaters = (joinStr " " $debaters.Value $newDebaters)}}
+	{{end}}
+	{{dbSet $dbID "debate" $newDebaters}}
+{{$MsgText:=joinStr " " "Welcome" $newPeople ". Debate rules:\n1. This is a turn-based debate. You can send 1 post when the bot pings you.\n2. If your turn comes and you want to pass, type pass.\n3. If you want to exit the debate, type exit.\n4. The debate ends when there is only 1 participant remaining, or if a moderator ends it.\n5. Mod commands:\n^turns start [users to debate, up to 5 in 1 command]: This command adds members and starts the debate if not started yet.\n^turns remove [users to debate, up to 5 in 1 command]: This command removes members and stops the debate if all debaters are gone.\n^turns query: This command lists all the debate participants in order.\n^turns stop: This command ends the debate"}}
+{{sendMessage $debateChannel $MsgText}}
+Success! Debate is open in <#{{$debateChannel}}>.
+	{{$start := dbGet $dbID "debatestart"}}
+	{{if not $start}}
+		{{if $args.IsSet 1}}	
+			{{giveRoleID ($args.Get 1) $debateRole}} 
+			{{dbSet $dbID "debatestart" "1"}}
+			{{$msgID:=sendMessageRetID $debateChannel (joinStr "" "<@" ($args.Get 1) "> You start!")}}
+			{{dbSet $dbID "debatemessage" (str $msgID)}}
+		{{end}}
+	{{end}}
+{{else if eq $arg "query"}}
+	{{$debaters := dbGet $dbID "debate"}}
+	{{$allPeople:=""}}
+	{{if $debaters}}
+		{{ range $index, $allDebaters:=reFindAll "[0-9]+" $debaters.Value}}{{$allPeople = (joinStr "" $allPeople (add $index 1) ". <@" $allDebaters ">\n")}}{{end}}
+	{{end}}
+{{sendMessage $debateChannel (joinStr "\n" "Debaters:" $allPeople)}}
+{{else if (reFind "(stop|end)" $arg)}}
+	{{dbDel $dbID "debate"}}
+	{{dbDel $dbID "debatestart"}}
+{{sendMessage $debateChannel "Debate has ended."}}
+{{else if eq $arg "remove"}}
+	{{$debaters := dbGet $dbID "debate"}}
+	{{$tempVar1:=$debaters.Value }}
+	{{$leave:=""}}
+	{{ range $x := seq 1 5 }}
+		{{if $args.IsSet $x}} {{$tempVar1 = reReplace ($args.Get $x) $tempVar1 ""}} {{$leave = (joinStr "" $leave "<@" (toString ($args.Get $x)) "> ")}}{{end}}
+	{{end}}	
+{{sendMessage $debateChannel (joinStr "" "<@" $leave "> has left the debate.")}}
+	{{if not (reFind "[0-9]+" $tempVar1)}}
+		{{dbDel $dbID "debate"}}
+		{{dbDel $dbID "debatestart"}}
+{{sendMessage $debateChannel "No debaters remaining. Ending the debate."}}
+	{{end}}
+{{end}}
