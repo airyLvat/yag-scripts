@@ -1,0 +1,23 @@
+{{/* this goes in the DM section of the moderation command it's for */}}
+
+{{$userID := .User.ID}}
+{{$dbID := 2110}}
+{{$memoRecord := "memo-"}}
+{{$lastRecord := 0}}
+{{$body := ""}}
+
+{{$query1 := dbGet $dbID (joinStr "" $memoRecord $userID)}}
+{{if $query1}} 
+	{{$memoSplit := (split $query1.Value "\n")}}
+	{{$lastRecord = (len $memoSplit)}} 
+{{end}}
+		
+{{$newRecord := (joinStr "" (add $lastRecord 1) "|" "Mute" "|" .Author.Username "|" currentTime.Month "/" currentTime.Day "/" currentTime.Year "-" (currentTime.Format "15:04") "|" .Reason)}}
+
+{{if $query1}}
+    {{$body = (joinStr "" $query1.Value "\n" $newRecord)}}
+{{else}}
+    {{$body = $newRecord}}
+{{end}}
+
+{{dbSet $dbID (joinStr "" $memoRecord $userID) $body}}
