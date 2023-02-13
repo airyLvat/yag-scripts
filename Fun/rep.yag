@@ -1,3 +1,5 @@
+{{/* ^\^\b(socialcredit|socialcreditscore|toprep|topcredit|topsocialcredit|topsocialcreditscore|topscore|kiss|holykiss|kith|bonk)\b */}}
+
 {{if and (reFind "\\b(?i)(socialcredit|socialcreditscore)\\b" .Cmd)}}
 	{{$user := .User }}
 	{{if .Message.Mentions}}
