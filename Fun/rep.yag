@@ -1,5 +1,3 @@
-{{/* ^\^\b(socialcredit|socialcreditscore|toprep|topcredit|topsocialcredit|topsocialcreditscore|topscore|kiss|holykiss|kith|bonk)\b */}}
-
 {{if and (reFind "\\b(?i)(socialcredit|socialcreditscore)\\b" .Cmd)}}
 	{{$user := .User }}
 	{{if .Message.Mentions}}
@@ -17,8 +15,11 @@
 		{{sendMessage nil $toprep}}
 	{{end}}
 {{else if and (reFind "(?i)(kiss|holykiss|kith)" .Cmd)}}
+		{{$args := parseArgs 1 "Syntax is `^holykiss [@user]`"
+			(carg "userid" "user to be kissed")
+		 }}
 	{{$cooldownExempt := (cslice
-						1028362194972327991
+						1029105006508519556
 	)}}
 	{{$checkCooldown:=true}}
 	{{$runIt:=true}}
@@ -50,11 +51,10 @@
 		{{$chinaMode := false}}
 		{{with reFindAllSubmatches `\A.*\*\*(\d+)\*\* .+? \(#\*\*(?:\d+|#ω)\*\*\)\z` (exec "rep" .User)}}{{$rep = toInt (index . 0 1)}}{{end}}
 		{{if ge $rep 25}}
-			{{$targetID:=cslice 592877356473909259}}
-			{{$idx:=randInt (len $targetID)}}
+			{{$targetID:=($args.Get 0)}}
 			{{$name1:=.Member.Nick}}
 			{{if not $name1}}{{$name1 = .User.Username}}{{end}}
-				{{$user2:=getMember (index $targetID $idx)}}
+				{{$user2:=getMember $targetID}}
 				{{$name2:=$user2.Nick}}
 			{{if not $name2}}{{$name2 = $user2.User.Username}}{{end}}
 				{{$name1}} gives {{$name2}} a holy kiss !
@@ -102,14 +102,14 @@
 			{{$rep :=  -1}} 
 			{{$chinaMode := false}}
 			{{with reFindAllSubmatches `\A.*\*\*(\d+)\*\* .+? \(#\*\*(?:\d+|#ω)\*\*\)\z` (exec "rep" .User)}}{{$rep = toInt (index . 0 1)}}{{end}}
-			{{if ge $rep 0}}
+			{{if ge $rep 25}}
 				{{$bonkDB:=cslice "<a:PepeBonkAnim:846692831085985802>" "<a:BonkCatAnim:695276972556812344>" "<a:BonkDogeAnim:752753870085685289>" "<a:Bonk1:801357467636072459>" "<a:Bonk2:801357466792624148>" "<a:Bonk3:801357466377650186>" "<a:Bonk4:801357466309754930>" "<a:Bonk5:801357466143162410>"}}
                 {{$nounDB:=cslice "cactus" "fish" "tube of toothpaste" "saxophone" "pancake" "water bottle" "fancy duck" "kettle" "flag" "onion" "DVD" "hat" "spoon" "sticker" "crab apple" "unspecified secret item" "chicken" "Rev Mike" "buffalo" "car" "grease" "monkey" "towel" "state" "coffee" "muffin" "pillow" "tooth" "beard" "cheese" "video" "shoe" "lizard" "bird" "store" "grandma" "fly" "building" "stop sign" "carrot" "worm" "feather" "trout" "mayonnaise" "ketchup" "steak" "radar" "radio" "jump rope" "goose" "cat" "dog" "fish tank" "chef" "taxi" "cook" "policeman" "theory" "brain" "satellite" "clown" "dish" "slime" "rat" "stinky shoe" "pretzel" "handkerchief" "soap" "lawyer" "warehouse" "planet" "eyebrow" "nose" "salmon" "bear" "ant" "waterfall" "bacon" "leaf" "loaf"}}
 				{{$bonk:=index $bonkDB (randInt 0 (len $bonkDB))}}
 				{{$placeholder:=(getMember .User.ID).Nick}}
 				{{if not $placeholder}}{{$placeholder = (userArg .User.ID).Username}}{{end}}
-					{{$modrole:=1028362194972327991}}
-					{{$adminrole:=0}}
+					{{$modrole:=1028490891901554798}}
+					{{$adminrole:=1029105006508519556}}
 					{{$princerole:=0}}
 					{{$princessrole:=0}}
 					{{$odprole:=0}}
