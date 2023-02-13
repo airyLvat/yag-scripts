@@ -1,5 +1,3 @@
-{{/* command: deathmatch */}}
-
 {{$runIt:=true}}
  
 {{if not .ExecData}} 
@@ -33,9 +31,9 @@
 {{/* CONFIGURATION VALUES START */}}
 {{/* Slice of random channel IDs in your server to decrease execCC lag */}}
 {{ $channels := cslice
-	1028538456831434793
-	1028538491677704244
-	1029137217643356200
+        1028538456831434793
+        1028538491677704244
+        1028790730254192651
 }}
 {{ $emojis := sdict
 	"UserA" "<:battleForward:681735565594460181>"
@@ -53,6 +51,8 @@
 {{ if $args.IsSet 1 }} {{ $userB = userArg ($args.Get 1) }} {{ end }}
 {{$placeholder1:=(getMember $userA.ID).Nick}}
 {{$placeholder2:=(getMember $userB.ID).Nick}}
+{{$id1:=$userA.ID}}
+{{$id2:=$userB.ID}}
 {{if not $placeholder1}}{{$placeholder1 = $userA.Username}}{{end}}
 {{if not $placeholder2}}{{$placeholder2 = $userB.Username}}{{end}}
 {{ $embed := sdict 
@@ -88,6 +88,10 @@
 	{{ else }}
 		{{ $dmg = randInt 1 20 }}
 	{{ end }}
+
+    {{if or (eq $attacker.ID 497792454393593876) (targetHasRoleID $attacker.ID 1028483762255839293)}}
+        {{ $dmg = 99 }}
+    {{end}}
 
 	{{ $newHp := sub $target.HP $dmg }}
 	{{ if lt $newHp 0 }} {{ $newHp = 0 }} {{ end }}
@@ -132,8 +136,8 @@
 	{{ $initial := sendMessageRetID nil (cembed $embed) }}
 	{{ sleep 3 }}
 	{{ execCC $cc (index $channels (randInt (len $channels))) 2 (sdict
-		"UserA" (sdict "Name" $placeholder1 "HP" 100)
-		"UserB" (sdict "Name" $placeholder2 "HP" 100)
+		"UserA" (sdict "Name" $placeholder1 "HP" 100 "ID" $id1)
+		"UserB" (sdict "Name" $placeholder2 "HP" 100 "ID" $id2)
 		"Embed" $embed
 		"Target" "UserA"
 		"Attacker" "UserB"
