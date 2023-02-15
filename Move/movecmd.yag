@@ -6,6 +6,10 @@
 {{$timer:=600}}
 {{$dbID:=21191}}
 {{$moveRoleID:=1032775032239300618}}
+{{$debateRoleID:=1028788096684277850}}
+{{$noDebateRoleID:=1029138615504207975}}
+{{$debateChannelID:=1028554642579267634}}
+{{$discussionChannelID:=1028555028350373909}}
 {{$debugChannelID:=1029137217643356200}}
 {{$debugEnabled:=true}}
 {{$rulesChID:="1028495485113212968"}}
@@ -116,21 +120,6 @@
 	{{range $placeholder}}
 		{{$msg = getMessage nil .}}
 		{{if $msg}}
-			{{$placeholder2:=(getMember $msg.Author).Nick}}
-			{{if not $placeholder2}}{{$placeholder2 = $msg.Author.Username}}{{end}}
-			{{$attachment:=""}}		
-			{{ with $msg.Attachments }} {{ $attachment = (index . 0).ProxyURL }} {{ end }}
-			{{sendMessage $destCh (cembed
-				"title" (printf "Message was pasted from #%s" $oriData.Channel.Name)
-				"color" 0x0066ff
-				"description" (or $msg.Content "*No content*")
-				"image" (sdict "url" $attachment)
-				"fields" (cslice
-					(sdict "name" "❯ Pasted by" "value" $oriData.User.String "inline" true)
-					(sdict "name" "❯ Message Author" "value" $placeholder2 "inline" true)
-					(sdict "name" "❯ Message" "value" (printf "[Jump to](https://discordapp.com/channels/%d/%d/%d)" $oriData.Guild.ID $oriData.Channel.ID $msg.ID) "inline" true)
-				)
-			) }}
 			{{$numMsgs = add $numMsgs 1}}
 		{{else}}
 				{{$temp1:=(getMember .)}}
@@ -141,6 +130,12 @@
 					{{$doMove:=false}} {{$canWrite:=false}} 
 					{{if and (not $isAdminB) (not $isModB)}}{{$doMove = true}}{{end}}
 					{{if and $isAdminA $isModB (not $isAdminB)}}{{$doMove = true}}{{end}}
+
+                    {{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID)) (not (targetHasRoleID (toInt64 $placeholder1) $debateRoleID))}}
+			            {{if not (targetHasRoleID (toInt64 $placeholder1) $noDebateRoleID)}}
+			            	{{giveRoleID (toInt64 $placeholder1) $debateRoleID}}
+			            {{end}}
+		            {{end}}
 		
 					{{$decimal:=$Guild.GetMemberPermissions (toInt64 $destCh) (toInt64 $placeholder1) $temp1.Roles}}
 					{{range $x := seq 0 10}}{{$decimal = div $decimal 2}}{{end}}
