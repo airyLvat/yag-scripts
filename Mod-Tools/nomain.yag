@@ -1,0 +1,53 @@
+{{/* not implemented yet */}}
+
+{{$allowedRole := 1029105006508519556 }}
+{{$allowedRole2 := 1028490891901554798}}
+{{$noMainRole := 1078388079510958230}}
+{{$noQaRole := 1029397658793680946}}
+{{$noDebateRole := 1029138615504207975}}
+{{$debateAccessRole := 1028788096684277850}}
+{{$seriousAccessRole := 1028788169409314896}}
+{{$msg := ""}}
+ 
+{{$args := parseArgs 1 "Syntax is `^nomain [@user]`"
+    (carg "userid" "user to be remove main chat access from")}}
+{{if or (hasRoleID $allowedRole) (hasRoleID $allowedRole2)}} {{/* Mod commands */}}
+    {{$userID:=($args.Get 0)}}
+	{{$auditCh := 1029137217643356200}}
+	{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ")")}}
+    {{if and (not (targetHasRoleID $userID $allowedRole)) (not (targetHasRoleID $userID $allowedRole2))}} {{/* Won't run if target is a mod */}}
+        {{$placeholder1:=(getMember $userID).Nick}}
+        {{if not $placeholder1}}
+            {{$placeholder1 = (userArg $userID).Username}}
+        {{end}}
+ 
+        {{if (targetHasRoleID $userID $noMainRole)}}
+            {{takeRoleID $userID $noMainRole}}
+            {{$msg = (joinStr "" "Adjusted " $placeholder1 "'s roles. They may now access channels in the Main category. "}}
+        {{else}}
+			{{if targetHasRoleID $userID $noDebateRole}}
+				{{execAdmin "mute" $userID "Given no main while already having no debate"}}
+				{{$msg = (joinStr "" "Muted " $placeholder1 " because they were given no main while already having no debate. "}}
+			{{else}}
+				{{if not (targetHasRoleID $debateAccessRole)}}
+					{{giveRoleID $userID $debateAccessRole}}
+				{{end}}
+
+				{{if not (targetHasRoleID $seriousAccessRole)}}
+					{{giveRoleID $userID $seriousAccessRole}}
+				{{end}}
+
+				{{if not (targetHasRoleID $noQaRole)}}
+					{{giveRoleID $userID $noQaRole}}
+				{{end}}
+
+				{{$msg = (joinStr "" "Adjusted " $placeholder1 "'s roles. They now have access to debate and serious topic channels. "}}
+			{{end}}
+
+            {{giveRoleID $userID $noMainRole}}
+            {{$msg = (joinStr "" "Adjusted " $placeholder1 "'s roles. They no longer have access channels in the Main category or Q/A. "}}
+        {{end}}
+
+		{{$msg}}
+    {{end}}
+{{end}}
