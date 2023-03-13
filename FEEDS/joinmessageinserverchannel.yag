@@ -6,9 +6,10 @@
 {{end}}	
 
 {{/*Makes sure usernames are pingable*/}}
-{{$new := reReplace `[^#-z ]` .User.Username ``}}
+{{$san := sanitizeText .User.Username}}
+{{$new := reReplace `[^#-z ]` $san ``}}
 {{if $new}}
-{{editNickname $new}}
+	{{editNickname $new}}
 {{else}}
-{{editNickname (joinStr " " "Unpingable Username" (randInt 100 999))}}
+	{{editNickname (joinStr " " "Unpingable Username" (randInt 100 999))}}
 {{end}}
