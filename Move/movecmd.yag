@@ -2,14 +2,16 @@
 
 {{$modID:=1028490891901554798}}
 {{$modhelperID:=1028549391306469376}}
-{{$adminID:=cslice 1029105006508519556 1029106935460532304}}
+{{$adminID:=cslice 1029105006508519556 1029106935460532304 1092880480229142634}}
 {{$timer:=600}}
 {{$dbID:=21191}}
 {{$moveRoleID:=1032775032239300618}}
 {{$debateRoleID:=1028788096684277850}}
+{{$seriousRoleID:=1028788169409314896}}
 {{$noDebateRoleID:=1029138615504207975}}
 {{$debateChannelID:=1028554642579267634}}
 {{$discussionChannelID:=1028555028350373909}}
+{{$seriousChannelID:=1028764052123553925}}
 {{$debugChannelID:=1029137217643356200}}
 {{$debugEnabled:=true}}
 {{$rulesChID:="1028495485113212968"}}
@@ -36,15 +38,10 @@
 	{{if and (reFind "(permmove|permamove)" .ExecData.Cmd) (or (hasRoleID 1029105006508519556) (hasRoleID 1028490891901554798)) }}{{$howLong = "an unspecified time"}} {{end}}
 	{{(joinStr "" "⬅️ " $msg " You are moved to " " <#" .ExecData.ch "> for " $howLong ". Please go there. You may be timed out if you don't move.⬅️")}} 
 	{{if or (eq .ExecData.ch $rulesChID) (eq .ExecData.ch $readRulesChID)}}
-		{{$msg = (joinStr "" "<a:ReadTheRulesAnim:846690917461262346> " $msg " Read the server rules here. <a:ReadTheRulesAnim:846690917461262346>")}}		
 		{{if $debugEnabled}}
 			{{$debugmsg = (joinStr " " $debugmsg " was moved to:")}}
 		{{end}}	
 	{{else if or (eq .ExecData.ch "1028838770767831152") (eq .ExecData.ch "1028788496367882280")}}
-		{{$msg = (joinStr " " "➡️" $msg "Please get your roles here. ⬇️")}}	
-		{{if $debugEnabled}}
-			{{$debugmsg = (joinStr "" $debugmsg " was moved to:")}}	
-		{{end}}	
 	{{else}}
 		{{$msg = (joinStr " " "➡️" $msg "Move your discussion here. You may be timed out if you don't move. ⬇️")}}
 		{{if $debugEnabled}}
@@ -75,9 +72,10 @@
 		{{if and (not $isAdminB) (not $isModB)}}{{$doMove = true}}{{end}}
 		{{if and $isAdminA $isModB (not $isAdminB)}}{{$doMove = true}}{{end}}
 
-        {{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID)) (not (targetHasRoleID (toInt64 $placeholder1) $debateRoleID))}}
+        {{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID) (eq (toInt64 $destCh) $seriousChannelID)) (not (targetHasRoleID (toInt64 $placeholder1) $debateRoleID))}}
             {{if not (targetHasRoleID (toInt64 $placeholder1) $noDebateRoleID)}}
                 {{giveRoleID (toInt64 $placeholder1) $debateRoleID}}
+				{{giveRoleID (toInt64 $placeholder1) $seriousRoleID}}
                 {{$temp1 = (getMember (toInt64 $placeholder1))}}
             {{end}}
         {{end}}
@@ -104,7 +102,6 @@
 	{{$Cmd:=.Cmd}}
 	{{$args := parseArgs 1 "Syntax is `^move [#channel] [@users (max 7 users in 1 command)]`"
 		(carg "string" "users to move")}}
-	{{/*$destCh:=(toString ($args.Get 0).ID)*/}}
 	{{$destCh:=""}}
 	{{$placeholder:=split ($args.Get 0) " "}}
 	{{$numUsers:=1}}
@@ -138,12 +135,13 @@
 					{{if and (not $isAdminB) (not $isModB)}}{{$doMove = true}}{{end}}
 					{{if and $isAdminA $isModB (not $isAdminB)}}{{$doMove = true}}{{end}}
 
-                    {{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID)) (not (targetHasRoleID (toInt64 $placeholder1) $debateRoleID))}}
-			            {{if not (targetHasRoleID (toInt64 $placeholder1) $noDebateRoleID)}}
-			            	{{giveRoleID (toInt64 $placeholder1) $debateRoleID}}
-					        {{$temp1 = (getMember (toInt64 $placeholder1))}}
-			            {{end}}
-		            {{end}}
+					{{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID) (eq (toInt64 $destCh) $seriousChannelID)) (not (targetHasRoleID (toInt64 $placeholder1) $debateRoleID))}}
+						{{if not (targetHasRoleID (toInt64 $placeholder1) $noDebateRoleID)}}
+							{{giveRoleID (toInt64 $placeholder1) $debateRoleID}}
+							{{giveRoleID (toInt64 $placeholder1) $seriousRoleID}}
+							{{$temp1 = (getMember (toInt64 $placeholder1))}}
+						{{end}}
+					{{end}}
 		
 					{{$decimal:=$Guild.GetMemberPermissions (toInt64 $destCh) (toInt64 $placeholder1) $temp1.Roles}}
 					{{range $x := seq 0 10}}{{$decimal = div $decimal 2}}{{end}}
@@ -162,7 +160,7 @@
 						{{end}}
 						{{if $permaMove}}
 							{{takeRoleID $placeholder1 $moveRoleID 1}}
-							{{sleep 2}}{{/*force-remove previous role timer, if any*/}}
+							{{sleep 5}}
 							{{giveRoleID $placeholder1 $moveRoleID}}
 							{{dbSet $dbID $placeholder1 $destChLocal }}
 						{{else}}
@@ -184,7 +182,6 @@
 	{{if and (lt $numUsers 2) (not $numMsgs) (lt $numUsersNoWrite 2)}}
 		{{deleteTrigger 10}}
 		{{deleteResponse 10}}
-{{/*error msg here*/}}
 	{{end}}
 {{end}}
  
