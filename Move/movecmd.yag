@@ -72,7 +72,7 @@
 		{{if and (not $isAdminB) (not $isModB)}}{{$doMove = true}}{{end}}
 		{{if and $isAdminA $isModB (not $isAdminB)}}{{$doMove = true}}{{end}}
 
-        {{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID) (eq (toInt64 $destCh) $seriousChannelID)) (not (targetHasRoleID (toInt64 $placeholder1) $debateRoleID))}}
+        {{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID) (eq (toInt64 $destCh) $seriousChannelID)) (not (and (targetHasRoleID (toInt64 $placeholder1) $debateRoleID) (targetHasRoleID (toInt64 $placeholder1) $seriousRoleID)))}}
             {{if not (targetHasRoleID (toInt64 $placeholder1) $noDebateRoleID)}}
                 {{giveRoleID (toInt64 $placeholder1) $debateRoleID}}
 				{{giveRoleID (toInt64 $placeholder1) $seriousRoleID}}
@@ -135,13 +135,13 @@
 					{{if and (not $isAdminB) (not $isModB)}}{{$doMove = true}}{{end}}
 					{{if and $isAdminA $isModB (not $isAdminB)}}{{$doMove = true}}{{end}}
 
-					{{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID) (eq (toInt64 $destCh) $seriousChannelID)) (not (targetHasRoleID (toInt64 $placeholder1) $debateRoleID))}}
-						{{if not (targetHasRoleID (toInt64 $placeholder1) $noDebateRoleID)}}
-							{{giveRoleID (toInt64 $placeholder1) $debateRoleID}}
-							{{giveRoleID (toInt64 $placeholder1) $seriousRoleID}}
-							{{$temp1 = (getMember (toInt64 $placeholder1))}}
-						{{end}}
-					{{end}}
+        {{if and (or (eq (toInt64 $destCh) $debateChannelID) (eq (toInt64 $destCh) $discussionChannelID) (eq (toInt64 $destCh) $seriousChannelID)) (not (and (targetHasRoleID (toInt64 $placeholder1) $debateRoleID) (targetHasRoleID (toInt64 $placeholder1) $seriousRoleID)))}}
+            {{if not (targetHasRoleID (toInt64 $placeholder1) $noDebateRoleID)}}
+                {{giveRoleID (toInt64 $placeholder1) $debateRoleID}}
+				{{giveRoleID (toInt64 $placeholder1) $seriousRoleID}}
+                {{$temp1 = (getMember (toInt64 $placeholder1))}}
+            {{end}}
+        {{end}}
 		
 					{{$decimal:=$Guild.GetMemberPermissions (toInt64 $destCh) (toInt64 $placeholder1) $temp1.Roles}}
 					{{range $x := seq 0 10}}{{$decimal = div $decimal 2}}{{end}}
