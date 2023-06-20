@@ -1,0 +1,31 @@
+{{$title := ""}}
+{{$count := 100}}
+ 
+{{if not .CmdArgs}}
+	{{$title = "List of first 100 moved users that are still in the server"}}
+{{else}}
+	{{$title = joinStr "" "List of moved users " $count " to " (add $count 100) " that are *still in the server*"}}
+	{{$count = index .CmdArgs 0}}
+{{end}}
+ 
+{{$outp := joinStr "" "There are a total of " (dbCount 21191) " moved users. To see next 100 moved users that are *still in the server*, use `^mlist " (add $count 100) "`"}}
+ 
+{{range (dbGetPattern 21191 "%" 100 (sub $count 100))}}
+	{{$exp := ""}}
+	{{$mem := getMember .Key}}
+	{{if ($mem)}}
+		{{$perm := eq (newDate 1 1 1 0 0 0).Unix .ExpiresAt.Unix}}
+ 
+		{{if $perm}}
+			{{$exp = joinStr "" "__**never (permanent)**__ since <t:" .CreatedAt.Unix ">"}}
+		{{else}}
+			{{$exp = joinStr "" "in " (humanizeDurationMinutes (.ExpiresAt.Sub currentTime))}}
+		{{end}}
+ 
+		{{$outp = joinStr "" $outp "\n\n* **" $mem.User.Username "** (ID: " $mem.User.ID ") moved to <#" .Value "> expires " $exp}}
+	{{end}}
+{{else}}
+	{{$outp = joinStr "" $outp "\n## Nothing in this range"}}
+{{end}}
+ 
+{{sendMessage nil (complexMessage "embed" (cembed "title" $title "description" $outp "color" 0xf3c6d4))}}
