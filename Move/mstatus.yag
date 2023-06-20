@@ -1,0 +1,14 @@
+{{$args := parseArgs 1 "Syntax is `^movestatus [@user]`"
+    (carg "userid" "user to be checked")}}
+{{$userID:=($args.Get 0)}}
+{{$chanID := dbGet 21191 $userID}}
+{{if $chanID}}
+    {{$exp := $chanID.ExpiresAt}}
+    {{$perm := eq (newDate 1 1 1 0 0 0).Unix $exp.Unix}}
+    {{$dur := ""}}
+    {{if $perm}} {{$dur = joinStr "" "permanently since <t:" $chanID.CreatedAt.Unix ">"}} {{else}} {{$dur = joinStr "" "for " (humanizeDurationMinutes ($exp.Sub currentTime))}} {{end}}
+ 
+	{{$userID}} **{{(getMember $userID).User.Username}}** is moved to {{(getChannel $chanID.Value).Mention}} {{$dur}}.
+{{else}}
+	User is not moved.
+{{end}}
