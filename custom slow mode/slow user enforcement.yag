@@ -1,0 +1,9 @@
+{{/* trigger: \A, restrict to users with slow role */}}
+
+{{$dbKey := "slow_role"}}
+{{$timeoutDur := dbGet .User.ID $dbKey}}
+{{$parsedTime := toDuration $timeoutDur.Value}}
+
+{{if $timeoutDur}}
+    {{$slow := execAdmin "timeout" .User.ID (toString $parsedTime) "custom user slow mode"}}
+{{end}}
