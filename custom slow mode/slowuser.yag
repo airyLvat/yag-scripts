@@ -1,0 +1,49 @@
+{{/* command: slowuser */}}
+
+{{$dbKey := "slow_role"}}
+{{$time := .TimeHour}}
+{{$slowRoleId := 1068689657904251041}}
+
+{{$args := parseArgs 1 "Syntax is <user> <time> (set to 0m to remove custom slow mode)"
+    (carg "userid" "user to give a slowmode to")
+    (carg "duration" "how long to make a user wait between messages")}}
+
+{{$userID := ($args.Get 0)}}
+{{$changeTime := false}}
+
+{{if $args.IsSet 1}}
+    {{$time = ($args.Get 1)}}
+	{{if gt $time (toDuration "28d")}}
+		{{$x := sendMessageRetID nil (joinStr "" "Time cannot be longer than " (humanizeDurationHours "28d") ". You tried to make it `" (humanizeDurationHours $time) "`.")}}
+		{{deleteMessage nil $x 10}}
+		{{return}}
+	{{end}}
+    {{$changeTime = true}}
+{{end}}
+
+{{$auditCh := 1120752202106024127}}
+{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ")")}}
+
+{{if and (not (targetHasRoleID $userID $slowRoleId)) $changeTime}}
+    {{giveRoleID $userID $slowRoleId}}
+    {{addReactions "☑️"}}
+{{end}}
+
+{{if $changeTime}}
+	{{if eq $time (toDuration "0m")}}
+		{{takeRoleID $userID $slowRoleId}}
+		{{dbDel $userID $dbKey}}
+		{{addReactions "❌"}}
+	{{else}}
+    	{{dbSet $userID $dbKey $time}}
+    	{{addReactions "⏱️"}}
+	{{end}}
+{{else}}
+	{{if (targetHasRoleID $userID $slowRoleId)}}
+		{{$timeoutDur := dbGet $userID $dbKey}}
+		{{$parsedTime := toDuration $timeoutDur.Value}}
+		{{sendMessage nil (joinStr "" (getMember $userID).User.Username " (" $userID ") custom slow mode is one message in the server every " $parsedTime ". Use `^slowuser " $userID " 0m` to remove.")}}
+	{{else}}
+		{{sendMessage nil (joinStr "" (getMember $userID).User.Username " (" $userID ") has no custom slow mode")}}
+	{{end}}
+{{end}}
