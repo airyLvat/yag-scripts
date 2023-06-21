@@ -21,9 +21,6 @@
     {{$changeTime = true}}
 {{end}}
 
-{{$auditCh := 1120752202106024127}}
-{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ")")}}
-
 {{if and (not (targetHasRoleID $userID $slowRoleId)) $changeTime}}
     {{giveRoleID $userID $slowRoleId}}
     {{addReactions "☑️"}}
@@ -35,9 +32,12 @@
 		{{dbDel $userID $dbKey}}
 		{{addReactions "❌"}}
 	{{else}}
-    	{{dbSet $userID $dbKey $time}}
-    	{{addReactions "⏱️"}}
+    		{{dbSet $userID $dbKey $time}}
+    		{{addReactions "⏱️"}}
 	{{end}}
+	
+	{{$auditCh := 1120752202106024127}}
+	{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ")")}}
 {{else}}
 	{{if (targetHasRoleID $userID $slowRoleId)}}
 		{{$timeoutDur := dbGet $userID $dbKey}}
