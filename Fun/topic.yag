@@ -1,11 +1,11 @@
 {{$name := "ConversationTopic"}}
-{{$lengthSec := 15}}
+{{$lengthSec := 60}}
 {{$id := 0}}
 {{$key := print "cooldown_" $name}}
 
 {{if dbGet (toInt64 $id) $key}}
     {{deleteTrigger 5}}
-	{{$x := sendMessageRetID nil "`^topic` is on cooldown for 15 seconds"}}
+	{{$x := sendMessageRetID nil "`^topic` is on cooldown for 60 seconds"}}
     {{deleteMessage nil $x 5}}
 {{else}}
     {{dbSetExpire (toInt64 $id) $key "cooldown" $lengthSec}}
@@ -164,10 +164,14 @@
     1121891598008078396
     }}
 
-    {{$topicIndex := index $messageList (randInt 0 (sub (len $messageList) 1))}}
-    {{$topic := (getMessage $topicRepo $topicIndex).Content}}
+    {{$topicIndex := toInt (dbGet .BotUser.ID $name).Value}}
+    {{if gt $topicIndex (sub (len $messageList) 1)}}{{$topicIndex = 0}}{{end}}
+    {{$topicID:= index $messageList $topicIndex}}
+    {{dbSet .BotUser.ID $name (add $topicIndex 1)}}
+
+    {{$topic := (getMessage $topicRepo $topicID).Content}}
     
-    {{$message := cembed "description" (joinStr "" "### " $topic) "color" 0x11FF99 "author" (sdict "name" (joinStr "" .Guild.Name " conversation topic") "icon_url" (joinStr "" "https://cdn.discordapp.com/icons/" .Guild.ID "/" .Guild.Icon ".png")) "footer" (sdict "text" (joinStr "" "Conversation topic requested by: " (or ((getMember .User.ID).Nick) .User.Globalname .User.Username)))}}
+    {{$message := cembed "description" (joinStr "" "### " $topic) "color" 0x11FF99 "author" (sdict "name" (joinStr "" .Guild.Name " conversation topic") "icon_url" (joinStr "" "https://cdn.discordapp.com/icons/" .Guild.ID "/" .Guild.Icon ".png")) "footer" (sdict "text" (joinStr "" "Conversation topic (" (add $topicIndex 1) " of " (len $messageList) ") requested by: " (or ((getMember .User.ID).Nick) .User.Globalname .User.Username)))}}
 	{{sendMessage nil $message}}
 	{{addReactions "✅"}}
 {{end}}
