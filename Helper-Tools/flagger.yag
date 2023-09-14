@@ -1,8 +1,9 @@
 {{/* trigger: reaction added, limited to role */}}
 
 {{$auditChId := 1150910610440212543}}
+{{$flaggerRole := 1028433921978945576}}
  
-{{if and (eq .Reaction.Emoji.APIName "❌") (targetHasRoleID .User.ID 1028433921978945576)}}
+{{if and (eq .Reaction.Emoji.APIName "❌") (targetHasRoleID .User.ID $flaggerRole)}}
     {{deleteAllMessageReactions .Channel.ID .Message.ID "❌"}}
     {{addMessageReactions .Channel.ID .Message.ID "👀"}}
     {{sendMessage $auditChId (joinStr "" .User.Mention " has reported this message: " .Message.Link)}}
