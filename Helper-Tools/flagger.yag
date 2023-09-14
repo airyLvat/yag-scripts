@@ -2,9 +2,10 @@
 
 {{$auditChId := todo-channelID}}
 {{$flaggerRole := todo-roleID}}
- 
-{{if and (eq .Reaction.Emoji.APIName "❌") (targetHasRoleID .User.ID $flaggerRole)}}
-    {{deleteAllMessageReactions .Channel.ID .Message.ID "❌"}}
+{{$flagEmoji := "❌"}}
+
+{{if and (eq .Reaction.Emoji.APIName $flagEmoji) (targetHasRoleID .User.ID $flaggerRole)}}
+    {{deleteAllMessageReactions .Channel.ID .Message.ID $flagEmoji}}
     {{addMessageReactions .Channel.ID .Message.ID "👀"}}
     {{sendMessage $auditChId (joinStr "" .User.Mention " has reported this message: " .Message.Link)}}
  
