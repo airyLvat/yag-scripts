@@ -1,7 +1,7 @@
 {{/* trigger: reaction added, limited to role */}}
 
-{{$auditChId := 1150910610440212543}}
-{{$flaggerRole := 1028433921978945576}}
+{{$auditChId := todo-channelID}}
+{{$flaggerRole := todo-roleID}}
  
 {{if and (eq .Reaction.Emoji.APIName "❌") (targetHasRoleID .User.ID $flaggerRole)}}
     {{deleteAllMessageReactions .Channel.ID .Message.ID "❌"}}
