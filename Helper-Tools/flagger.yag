@@ -1,0 +1,18 @@
+{{/* trigger: reaction added, limited to role */}}
+
+{{$auditChId := 1150910610440212543}}
+ 
+{{if and (eq .Reaction.Emoji.APIName "❌") (targetHasRoleID .User.ID 1028433921978945576)}}
+    {{deleteAllMessageReactions .Channel.ID .Message.ID "❌"}}
+    {{addMessageReactions .Channel.ID .Message.ID "👀"}}
+    {{sendMessage $auditChId (joinStr "" .User.Mention " has reported this message: " .Message.Link)}}
+ 
+    {{$e := sdict
+    "author" (sdict
+        "name" (print (or ((getMember .Message.Author.ID).Nick) .Message.Author.Globalname .Message.Author.Username) " (ID " .Message.Author.ID ")")
+        "icon_url" ((or (getMember .Message.Author.ID) .Message.Author.ID).AvatarURL "1024"))
+    "description" .Message.Content
+    "color" 0x36393F
+    "timestamp" .Message.Timestamp}}
+    {{sendMessage $auditChId (cembed $e)}}
+{{end}}
