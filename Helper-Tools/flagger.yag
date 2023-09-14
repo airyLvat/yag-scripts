@@ -14,5 +14,6 @@
     "description" .Message.Content
     "color" 0x36393F
     "timestamp" .Message.Timestamp}}
-    {{sendMessage $auditChId (cembed $e)}}
+    {{$x := sendMessageRetID $auditChId (cembed $e)}}
+    {{addMessageReactions $auditChId $x "✅"}}
 {{end}}
