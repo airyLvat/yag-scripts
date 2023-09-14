@@ -1,0 +1,27 @@
+{{$noVCRoleID := 1066495800991039639}}
+ 
+{{$args := parseArgs 1 "Syntax is `^vctimeout [@user] [duration] [reason]`"
+    (carg "userid" "user to VC timeout")
+    (carg "string" "duration")
+    (carg "string" "reason")}}
+{{$userID := $args.Get 0}}
+
+{{$durationGiven := false}}
+{{$duration := toDuration "10m"}}
+{{if $args.IsSet 1}} {{$duration = toDuration ($args.Get 1)}} {{$durationGiven = true}} {{end}}
+{{if gt (toDuration "2s") $duration}} {{$duration = toDuration "10m"}} {{$durationGiven = false}} {{end}}
+
+{{$reason := "not specified"}}
+{{if $durationGiven}}
+    {{if $args.IsSet 2}} {{$reason = $args.Get 2}} {{end}}
+{{else}}
+    {{if $args.IsSet 1}} {{$reason = $args.Get 1}} {{end}}
+{{end}}
+
+{{$auditCh := 1029137217643356200}}
+{{sendMessage $auditCh (joinStr "" .User.Username " ran `" .Cmd "` on " (getMember $userID).User.Username " (" $userID ") [duration: " (humanizeDurationMinutes $duration) "] [reason: " $reason "]")}}
+{{if not (targetHasRoleID $userID $noVCRoleID)}}
+    {{giveRoleID $userID $noVCRoleID}}
+    {{takeRoleID $userID $noVCRoleID $duration.Seconds}}
+    {{addReactions "✅"}}
+{{end}}
