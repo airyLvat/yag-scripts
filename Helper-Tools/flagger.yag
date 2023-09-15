@@ -17,5 +17,17 @@
     "color" 0x36393F
     "timestamp" .Message.Timestamp}}
     {{$x := sendMessageRetID $auditChId (cembed $e)}}
-    {{addMessageReactions $auditChId $x "✅"}}
+    {{addMessageReactions $auditChId $x "❓"}}
+{{end}}
+
+=====================================================
+
+{{/* triger: reaction added, in flag review channel */}}
+
+{{$auditChId := todo-channelID}}
+{{$flagEmoji := "❓"}}
+
+{{if eq .Reaction.Emoji.APIName $flagEmoji}}
+    {{deleteAllMessageReactions .Channel.ID .Message.ID $flagEmoji}}
+    {{addMessageReactions .Channel.ID .Message.ID "✅"}}
 {{end}}
